@@ -26,8 +26,8 @@ struct node *rear=NULL;
 	
 	while(it != NULL){
 		printk(" \n %s------>", it->dir->d_iname);
-		it = it->next;
-	
+			it = it->next;
+	remove this
 	}
 }*/
 
