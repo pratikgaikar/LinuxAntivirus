@@ -10,13 +10,8 @@
 #include <linux/string.h>
 //Linked list implementation of Queue
 struct node{
-        struct dir_struct *dir_struct;
+        struct dentry *dir;
         struct node * next;
-};
-
-struct dir_struct{
-	struct dentry *dir;
-	char *dir_path;
 };
 
 /*
@@ -36,10 +31,10 @@ struct node *rear=NULL;
 	}
 }*/
 
-void add_new_node(struct dir_struct *dir)
+void add_new_node(struct dentry *dir)
 {
         struct node * node = kmalloc(sizeof(struct node), GFP_KERNEL);
-        node->dir_struct = dir;
+        node->dir = dir;
         node->next = NULL;
         if(head == NULL) {
                 head = rear = node;
@@ -50,10 +45,10 @@ void add_new_node(struct dir_struct *dir)
 	}
 }
 
-struct dir_struct *delete_node(void *test)
+struct dentry *delete_node(void *test)
 {
 	struct node *my_current = NULL;
-	struct dir_struct *dir = NULL;
+	struct dentry *dir = NULL;
         if(head == NULL) {
 		 return dir;
 	}
@@ -66,7 +61,7 @@ struct dir_struct *delete_node(void *test)
 	else
 		head = head->next;
 	
-	dir = my_current->dir_struct;
+	dir = my_current->dir;
 	
 	if(my_current)        
 		kfree(my_current);
@@ -82,10 +77,11 @@ int is_empty(void *test)
 		return -1;
 }
 
-int check_for_virus(char *filename)
+/*int check_for_virus(char *filename)
 {
 	int err = 0, offset = 0;
-	struct file *black_list= NULL, *white_list =NULL, *input_file = NULL, char *buff = NULL;
+	struct file *black_list= NULL, *white_list =NULL, *input_file = NULL;
+	char *buff = NULL;
 		
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         
@@ -106,7 +102,7 @@ int check_for_virus(char *filename)
 		goto out;
         }
 	
-	i_size = i_size_read(file_inode(file));
+	int i_size = i_size_read(file_inode(input_file));
 	
 	while(offset < i_size)
 	{
@@ -124,42 +120,29 @@ int check_for_virus(char *filename)
 		filp_close(input_file,NULL);	
 
 	return err;
-}
+}*/
 
-void iterate_over_files(struct dir_struct *dir_struct)
+void iterate_over_files(struct dentry *thedentry)
 {
 	struct dentry * curdentry = NULL;
-	struct dir_struct *sub_dir_struct = NULL;
-	char *full_path = NULL;
-
-	struct dentry *thedentry = dir_struct->dir;
+	
+	char *pathname = NULL, *finalpath = NULL;
 
 	list_for_each_entry(curdentry, &thedentry->d_subdirs, d_child) 
 	{
 		if(S_ISREG(curdentry->d_inode->i_mode)) {
-			
-			int filelen = strlen(dir_struct->dir_path) + strlen(curdentry->d_iname) + 2;
-			full_path = kmalloc(filelen, GFP_KERNEL);
-			strcpy(full_path,dir_struct->dir_path);
-			strcat(full_path,"/");
-			strcat(full_path,curdentry->d_iname);
-			full_path[filelen-1]='\0';
-			printk("\nRegular File ---->%s",full_path);	
+			pathname = kzalloc(4096, GFP_KERNEL);
+       			finalpath = dentry_path_raw(curdentry, pathname, 4096);
+			printk("Regular file Pathname %s",finalpath);	
+			kfree(pathname);     			
 			
         	}
 		else if(S_ISDIR(curdentry->d_inode->i_mode)){
-           		
-			sub_dir_struct = kmalloc(sizeof(struct dir_struct),GFP_KERNEL);
-			sub_dir_struct->dir = curdentry;
-			int len = strlen(dir_struct->dir_path) + strlen(curdentry->d_iname) + 2;
-			sub_dir_struct->dir_path = kmalloc(len,GFP_KERNEL);
-			strcpy(sub_dir_struct->dir_path,dir_struct->dir_path);
-			strcat(sub_dir_struct->dir_path,"/");
-			strcat(sub_dir_struct->dir_path,curdentry->d_iname);
-			sub_dir_struct->dir_path[len-1]='\0';
-			printk("\nDirectory ---->%s",sub_dir_struct->dir_path);			
-			
-			add_new_node(sub_dir_struct);                 
+           		pathname = kzalloc(4096, GFP_KERNEL);
+       			finalpath = dentry_path_raw(curdentry, pathname, 4096);
+			printk("Regular file Pathname %s",finalpath);	
+			add_new_node(curdentry);
+			kfree(pathname);                 
         	}		
 	}
 }
@@ -168,25 +151,12 @@ static int __init antivirus_init(void)
 {
 	struct file *fi = NULL;
 	struct dentry * thedentry = NULL;
-	struct dir_struct *dir_struct = NULL;
-
-	dir_struct = kmalloc(sizeof(struct dir_struct),GFP_KERNEL);
-
+	
 	fi = filp_open("/usr/src/testdir", O_RDONLY, 0);
 	
 	thedentry = fi->f_path.dentry;
 
-	dir_struct->dir = thedentry;
-	
-	dir_struct->dir_path = kmalloc(17,GFP_KERNEL);
-
-	strncpy(dir_struct->dir_path,"/usr/src/testdir", 16);
-	
-	dir_struct->dir_path[16] = '\0';
-	
-	printk("Root Dir ---> %s", dir_struct->dir_path);
-	
-	add_new_node(dir_struct);
+	add_new_node(thedentry);
 	
 	while( is_empty(NULL)!= 0)
 	{
