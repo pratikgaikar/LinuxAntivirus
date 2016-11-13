@@ -11,19 +11,13 @@ struct node{
         struct node * next;
 };
 
-/*
- * Head points to the first node in the linked list.
- */
-struct node *head=NULL;
-struct node *rear=NULL;
 
 /*
  *function prototype
  */
-
 void add_new_node(struct dentry *dir);
 struct dentry *delete_node(void*);
-bool is_empty(void*);
-
+int is_empty(void*);
+void status_link(void *test);
 
 #endif
