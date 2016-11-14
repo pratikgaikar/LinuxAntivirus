@@ -27,3 +27,11 @@ int read_file(struct file* file, char *data, int size) {
         return ret;
 }
 
+int rename_file(struct file *temp_file, struct file *output_file)
+{
+	int ret =0;        
+	//int ret=vfs_rename(d_inode(file_dentry(temp_file)->d_parent),file_dentry(temp_file), d_inode(file_dentry(output_file)->d_parent),file_dentry(output_file), NULL, 0);
+        //vfs_unlink(d_inode(file_dentry(output_file)->d_parent), file_dentry(output_file), NULL);
+        return ret;
+}
+

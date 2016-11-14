@@ -1,84 +1,135 @@
 #include"antivirus.h"
 
-int check_for_whitelist(char *filename)
+static int init_desc(struct hash_desc *desc)
 {
-	int err = 0,ret = 0, read_bytes = 0, virusflag =0, read_bytes1 = 0, i_size = 0, i_size1= 0;
-	struct file *black_list= NULL, *white_list =NULL, *input_file = NULL;
-	int file_seek_position = 0;
-	char *black_list_buff = NULL, *virusname = NULL , *parse_virus= NULL, *input_file_buffer= NULL;
-	
-	white_list = filp_open("/etc/antivirusfiles/whitelist", O_RDONLY, 0);
-        if(IS_ERR(white_list)) {
-                printk("\nError white_list in file open");
-		goto out;
-        }
+	int rc;
 
-	input_file = filp_open(filename, O_RDONLY, 0);
-        if(IS_ERR(input_file)) {
-                printk("\nError in input file open");
-		goto out;
-        }
-
-	input_file_buffer = kmalloc(PAGE_SIZE,GFP_KERNEL);
-	if(input_file_buffer == NULL)
-	{
-		err = -ENOMEM;
-		goto out;
+	desc->tfm = crypto_alloc_hash("sha1", 0, CRYPTO_ALG_TYPE_DIGEST);
+	if (IS_ERR(desc->tfm)) {
+		printk("Failed to load %s transform: %ld\n",
+				"sha1", PTR_ERR(desc->tfm));
+		rc = PTR_ERR(desc->tfm);
+		return rc;
 	}
-
-	i_size = i_size_read(file_inode(black_list));
-	i_size1 = i_size_read(file_inode(input_file));
-	
-	while(i_size > 0 )
-	{
-		if(black_list_buff == NULL || strlen(black_list_buff) == 0)
-		{		
-			black_list_buff = kmalloc(PAGE_SIZE,GFP_KERNEL);
-			read_bytes = read_file(black_list, &black_list_buff, 35);
-			file_seek_position += remove_garbage_value(&black_list_buff, 35);
-        		black_list->f_pos = file_seek_position;	
-			i_size -= strlen(black_list_buff);	
-		}
-			
-		parse_virus = strsep(&black_list_buff,"\n");
-		
-		virusname = strsep(&parse_virus,",");
-
-		printk("\n Virus Name %s",virusname);
-
-		printk("\n Virus content %s", parse_virus);
-		
-		/*while(i_size1 > 0 )
-		{			
-			input_file_buffer[0]='\0';
-			read_bytes1 = read_file(input_file, input_file_buffer, 35);
-			printk("\nInput_file_buffer -\n%s", input_file_buffer);			
-			if(strstr(parse_virus,input_file_buffer)!= NULL)
-			{
-				printk("\t Virus file.");
-				virusflag = 1;				
-				goto out;				
-			}	
-			i_size1 -= read_bytes1;	
-		}*/					
-	}
-
-	out:	
-	if(virusflag == 1)
-		//Code for rename file to .virus.
-	if(black_list)	
-		filp_close(black_list,NULL);	
-	
-	if(white_list)	
-		filp_close(white_list,NULL);
-
-	if(input_file)
-		filp_close(input_file,NULL);	
-
-	if(input_file_buffer)
-		kfree(input_file_buffer);
-	return err;
+	desc->flags = 0;
+	rc = crypto_hash_init(desc);
+	if (rc)
+		crypto_free_hash(desc->tfm);
+	return rc;
 }
+
+
+/*
+ * Calculate the SHA1 file digest
+ */
+int calculate_hash(struct file *input_file,char *sha1_hash)
+{
+	struct hash_desc desc;
+	struct scatterlist scatter_list[1];
+	loff_t i_size, offset = 0;
+	char *file_buf=NULL;
+	unsigned char * digest=NULL;
+	int rc,i;
+	rc = init_desc(&desc);
+	digest=kzalloc(crypto_hash_crt(desc.tfm)->digestsize,GFP_KERNEL);
+	
+	if (rc != 0)
+		goto out;
+
+	file_buf = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!file_buf) {
+		rc = ENOMEM;
+		goto out;
+	}
+	i_size = i_size_read(input_file->f_path.dentry->d_inode);
+	while (offset < i_size) {
+		int file_buf_len;
+
+		file_buf_len = kernel_read(input_file, offset, file_buf, PAGE_SIZE);
+		if (file_buf_len < 0) {
+			rc = file_buf_len;
+			break;
+		}
+		if (file_buf_len == 0)
+			break;
+		offset +=file_buf_len;
+		sg_init_one(scatter_list, file_buf, file_buf_len);
+
+		rc = crypto_hash_update(&desc, scatter_list, file_buf_len);
+		if (rc)
+			break;
+	}
+	if (!rc)
+		rc = crypto_hash_final(&desc, digest);
+	for (i = 0; i < 20; i++) {
+		sprintf(&sha1_hash[i*2],"%02x", digest[i]);
+	}
+	printk("hash from sha1 =%s\n",sha1_hash);
+	
+out:
+	crypto_free_hash(desc.tfm);
+	kfree(digest);
+	kfree(file_buf);
+	return rc;
+}
+
+bool check_in_whitelist(struct file * input_file,struct file * white_list)
+{
+	bool in_whitelist=false;
+	int size=83;
+	int file_seek_position=0;
+	char *pattern=NULL;
+	const char *delimiter="\n";
+	loff_t i_size = i_size_read(file_inode(white_list));
+	char * whitelist_buffer=NULL;
+	char *init_buffer=kmalloc(size,GFP_KERNEL);
+	init_buffer[0]='\0';
+	char *sha1_hash_file=NULL;
+	sha1_hash_file=kzalloc(41,GFP_KERNEL);
+	sha1_hash_file[0]='\0';
+	calculate_hash(input_file,sha1_hash_file);
+	while(i_size>0)
+	{
+		if(pattern==NULL)
+		{	
+			whitelist_buffer=init_buffer;
+			read_file(white_list,whitelist_buffer,size);
+			file_seek_position += remove_garbage_value(whitelist_buffer,size);
+			printk("buff=%s\n",whitelist_buffer);
+			white_list->f_pos = file_seek_position;
+			printk("file pos=%d\n",file_seek_position);
+			i_size-=strlen(whitelist_buffer);
+			pattern=strsep(&whitelist_buffer,delimiter);
+		}
+		while(pattern!=NULL)
+		{
+			if(strcmp(sha1_hash_file,pattern)==0)
+			{
+				in_whitelist=true;
+				goto out;
+			}
+			pattern=strsep(&whitelist_buffer,delimiter);
+			//printk("pattern----- =%s\n",pattern);			
+			if(pattern==NULL||strlen(pattern)==0)
+			{
+				pattern=NULL;
+			}
+			else
+			{
+			    //printk("pattern----- =%s\n",pattern);
+			}
+		}
+	}
+
+out:
+	if(init_buffer!=NULL)
+		kfree(init_buffer);
+	if(sha1_hash_file!=NULL)	
+		kfree(sha1_hash_file);	
+	return in_whitelist;
+
+}
+
 
 
 

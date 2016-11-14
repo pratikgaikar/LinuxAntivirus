@@ -1,12 +1,12 @@
 #include"antivirus.h"
 
-int check_for_virus(char *filename)
+/*bool check_for_virus(char *filename)
 {
 	int err = 0,ret = 0, read_bytes = 0, virusflag =0, read_bytes1 = 0, i_size = 0, i_size1= 0;
-	struct file *black_list= NULL, *input_file = NULL;
+	struct file *black_list= NULL, *input_file = NULL , *virus_filp = NULL;
 	int file_seek_position = 0;
 	char *black_list_buff = NULL, *virusname = NULL , *parse_virus= NULL, *input_file_buffer= NULL;
-	
+	bool is_virus=false;
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         
 	if(IS_ERR(black_list)) {
@@ -62,23 +62,35 @@ int check_for_virus(char *filename)
 			}	
 			i_size1 -= read_bytes1;	
 		}*/					
-	}
+/*	}
 
 	out:	
-	if(virusflag == 1)
-		//Code for rename file to .virus.
-	if(black_list)	
-		filp_close(black_list,NULL);	
+	if(virusflag == 0)
+	{
+		char *name = kmalloc(strlen(filename) + 7,GFP_KERNEL);
+		strcat(name,".virus");	
+		printk("\nFilename %s", name);
+ 
+		virus_filp = filp_open(name,O_WRONLY|O_CREAT, 0644);
+        	 if(IS_ERR(virus_filp)) {
+                  	err = PTR_ERR(virus_filp);
+                  	
+		 }
+		 rename_file(input_file,virus_filp);
+		 kfree(name);
+        }
 	
+
+	if(black_list)	
+		filp_close(black_list,NULL);		
 
 	if(input_file)
 		filp_close(input_file,NULL);	
 
 	if(input_file_buffer)
 		kfree(input_file_buffer);
-	return err;
+		
+	return is_virus;
 }
 
-
-
-
+*/
