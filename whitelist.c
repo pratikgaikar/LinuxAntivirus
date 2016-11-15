@@ -3,7 +3,6 @@
 static int init_desc(struct hash_desc *desc)
 {
 	int rc;
-
 	desc->tfm = crypto_alloc_hash("sha1", 0, CRYPTO_ALG_TYPE_DIGEST);
 	if (IS_ERR(desc->tfm)) {
 		printk("Failed to load %s transform: %ld\n",
@@ -64,8 +63,7 @@ int calculate_hash(struct file *input_file,char *sha1_hash)
 	for (i = 0; i < 20; i++) {
 		sprintf(&sha1_hash[i*2],"%02x", digest[i]);
 	}
-	printk("hash from sha1 =%s\n",sha1_hash);
-	
+		
 out:
 	crypto_free_hash(desc.tfm);
 	kfree(digest);
@@ -95,9 +93,7 @@ bool check_in_whitelist(struct file * input_file,struct file * white_list)
 			whitelist_buffer=init_buffer;
 			read_file(white_list,whitelist_buffer,size);
 			file_seek_position += remove_garbage_value(whitelist_buffer,size);
-			printk("buff=%s\n",whitelist_buffer);
 			white_list->f_pos = file_seek_position;
-			printk("file pos=%d\n",file_seek_position);
 			i_size-=strlen(whitelist_buffer);
 			pattern=strsep(&whitelist_buffer,delimiter);
 		}
@@ -109,14 +105,9 @@ bool check_in_whitelist(struct file * input_file,struct file * white_list)
 				goto out;
 			}
 			pattern=strsep(&whitelist_buffer,delimiter);
-			//printk("pattern----- =%s\n",pattern);			
 			if(pattern==NULL||strlen(pattern)==0)
 			{
 				pattern=NULL;
-			}
-			else
-			{
-			    //printk("pattern----- =%s\n",pattern);
 			}
 		}
 	}

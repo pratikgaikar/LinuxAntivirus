@@ -31,15 +31,17 @@ int check_for_virus(char *filename)
 	in_whitelist=check_in_whitelist(input_file,white_list);
 	if(in_whitelist)
 	{
+		printk("\n%s FILE IS GOOD FOUND IN WHITELIST.", filename);		
 		goto out;
 	}
 	/* Check for virus content */
-	/*is_virus=check_in_blacklist(input_file,black_list);
+	is_virus=check_in_blacklist(input_file,black_list);
 	if(is_virus)
 	{
+		printk("\nVIRUS FOUND IN FILE %s", filename);
 		//rename the file //or put it in the virus list.
 		goto out;
-	}*/
+	}
 out:	
 	/*Close blacklist file */
 	if(black_list)

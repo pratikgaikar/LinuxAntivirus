@@ -14,6 +14,8 @@
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
 #include <linux/namei.h>
+#include <linux/acpi.h>
+#include <linux/ctype.h>
 
 //Linked list implementation of Queue
 struct node{
@@ -41,6 +43,10 @@ int check_for_virus(char *filename);
  */
 bool check_in_whitelist(struct file * input_file,struct file * white_list);
 
+/*
+ *function prototype for blacklist operations.
+ */
+bool check_in_blacklist(struct file * input_file,struct file * black_list);
 
 /*
  *function prototype for file operations
