@@ -49,12 +49,12 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		if(black_list_work_buff == NULL || strlen(black_list_work_buff) == 0)
 		{
 			black_list_work_buff = black_list_init_buff;
-			read_blacklist_bytes = read_file(blacklist_file, black_list_work_buff, 35);
-			blacklist_fp += remove_garbage_value(black_list_work_buff, 35);
+			read_blacklist_bytes = read_file(blacklist_file, black_list_work_buff, PAGE_SIZE);
+			blacklist_fp += remove_garbage_value(black_list_work_buff, PAGE_SIZE);
         		blacklist_file->f_pos = blacklist_fp;
 			blacklist_size -= strlen(black_list_work_buff);	
 		}
-			
+
 		if(black_list_work_buff != NULL)
 			parse_virus = strsep(&black_list_work_buff,"\n");
 		
@@ -72,7 +72,7 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 
 		while(file_size > 0 )
 		{			
-			read_file_bytes = read_file(input_file, input_file_buff, 35);
+			read_file_bytes = read_file(input_file, input_file_buff,  PAGE_SIZE);
 			//printk("Input_file_buffer:%s\n", input_file_buff);
 			if(strstr(input_file_buff, hex_in_char_ptr)!= NULL)
 			{

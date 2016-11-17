@@ -136,7 +136,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	if(buffer != NULL && strstr(buffer, "pratik"))
+	//if(buffer != NULL && strstr(buffer, "pratik"))
 	{
 		//printk("Open hooked for file %s\n", buffer);
 		ret = start_scan(buffer);
