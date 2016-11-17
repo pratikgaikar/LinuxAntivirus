@@ -6,6 +6,7 @@
 
 unsigned long *syscall_table = NULL; 
 asmlinkage long (*original_open) (const char __user *, int, umode_t);
+asmlinkage long (*original_execve) (const char __user *, const char __user *, const char __user *);
 
 char *acquire_kernel_version (char *buf) {
 	struct file *proc_version = NULL;
@@ -117,7 +118,7 @@ out:	if(f != NULL) {
 	return ret;
 }
 
-void iterate_over_files(struct dentry *thedentry)
+/*void iterate_over_files(struct dentry *thedentry)
 {
 	struct dentry * curdentry = NULL;
 	
@@ -143,28 +144,14 @@ void iterate_over_files(struct dentry *thedentry)
 				kfree(pathname);                 
         	}		
 	}
-}
+}*/
 
 int start_scan(char *path)
 {
-	struct file *fi = NULL;
-	struct dentry * thedentry = NULL;
+	int ret = 0;
 	printk("\nAntivirus started ------->");	
-	fi = filp_open("/usr/src/sucks", O_RDONLY, 0);
-	thedentry = fi->f_path.dentry;
-	
-	printk("ROOT ---- >%s",thedentry->d_iname);
-
-	add_new_node(thedentry);
-	
-	while( is_empty(NULL)!= 0)
-	{
-		iterate_over_files(delete_node(NULL));
-	}
-	
-	if(fi)	
-		filp_close(fi, NULL);	
-
+	if(path!=NULL)	
+		check_for_virus(path);
 	return 0;
 }
 
@@ -173,19 +160,21 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	char *buffer = NULL;
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
-
 	copy_from_user(buffer, path, 4096);
-	
-
 	if(buffer != NULL && strstr(buffer, "pratik"))
 	{
 		printk("\nOpen hooked for file %s", buffer);
-		//start_scan(buffer);
+		start_scan(buffer);
 	}	
 	if(buffer)
 		kfree(buffer);
 	
 	return original_open(path, flags, mode);
+}
+
+asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
+	printk("execve() hooked\n");
+	return original_execve(path, argv, envp);
 }
 
 static int __init antivirus_init(void)
@@ -205,7 +194,8 @@ static int __init antivirus_init(void)
 		if (syscall_table != NULL) {
 			write_cr0(read_cr0() & (~0x10000));
 			original_open = (void *)syscall_table[__NR_open];
-
+			original_execve = (void *)syscall_table[__NR_execve];
+			syscall_table[__NR_execve] = (unsigned long) &new_execve;
 			syscall_table[__NR_open] = (unsigned long) &new_open;
 			write_cr0(read_cr0() | 0x10000);
 			printk("sys_call_table hooked successfully\n");
@@ -214,7 +204,6 @@ static int __init antivirus_init(void)
 			printk("syscall_table is NULL\n");
 		}
 	}
-	start_scan(NULL);
 out:	
 	if(kernel_version != NULL) {
 		kfree(kernel_version);

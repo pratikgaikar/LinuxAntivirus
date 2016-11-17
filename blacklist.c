@@ -33,8 +33,6 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 	char *black_list_work_buff = NULL, *black_list_init_buff = NULL, *virus_name = NULL , *parse_virus= NULL, *input_file_buff= NULL;
 	char *hex_in_char_ptr=NULL;
 	
-	printk("\nEntered check_for_virus function\n");
-	
 	input_file_buff = kmalloc(PAGE_SIZE,GFP_KERNEL);
 	if(input_file_buff == NULL)
 	{
@@ -48,8 +46,6 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 	black_list_init_buff[0]='\0';
 	while(blacklist_size > 0 )
 	{		
-		printk("Start of While\n");
-
 		if(black_list_work_buff == NULL || strlen(black_list_work_buff) == 0)
 		{
 			black_list_work_buff = black_list_init_buff;
@@ -71,31 +67,31 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		while(file_size > 0 )
 		{			
 			read_file_bytes = read_file(input_file, input_file_buff, 35);
-			printk("Input_file_buffer:%s\n", input_file_buff);
+			//printk("Input_file_buffer:%s\n", input_file_buff);
 			if(strstr(input_file_buff, hex_in_char_ptr)!= NULL)
 			{
-				printk("This is a Virus file\n");
-				printk("Virus found %s\n",virus_name); 
+				//printk("This is a Virus file\n");
+				//printk("Virus found %s\n",virus_name); 
 				virus_flag = true;				
 				goto out;				
 			}
 				if(input_file->f_pos!=original_file_size)
 				{
-					printk("Read 35 bytes\n");
-					printk("1-File position is :%d\n",input_file->f_pos);
+					//printk("Read 35 bytes\n");
+					//printk("1-File position is :%d\n",input_file->f_pos);
 					input_file->f_pos -= (hex_in_char_len);
 					file_size = file_size - read_file_bytes + (hex_in_char_len);
 				}
 				else
 				{
-					printk("less than 35 bytes read\n");
+					//printk("less than 35 bytes read\n");
 					file_size -= read_file_bytes;
-					printk("2-File position is :%d\n",input_file->f_pos);
+					//printk("2-File position is :%d\n",input_file->f_pos);
 				}
-			printk("file_size : %d\n", file_size);
+			
 			input_file_buff[0]='\0';
 		}
-		printk("This Virus %s was not found\n",virus_name); 
+		//printk("This Virus %s was not found\n",virus_name); 
 		if(hex_in_char_ptr)
 			kfree(hex_in_char_ptr);			
 	}

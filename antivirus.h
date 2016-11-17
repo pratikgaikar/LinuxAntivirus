@@ -16,6 +16,7 @@
 #include <linux/namei.h>
 #include <linux/acpi.h>
 #include <linux/ctype.h>
+#include <linux/dcache.h>
 
 //Linked list implementation of Queue
 struct node{

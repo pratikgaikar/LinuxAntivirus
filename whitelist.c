@@ -74,7 +74,7 @@ out:
 bool check_in_whitelist(struct file * input_file,struct file * white_list)
 {
 	bool in_whitelist=false;
-	int size=83;
+	int size=PAGE_SIZE;
 	int file_seek_position=0;
 	char *pattern=NULL;
 	const char *delimiter="\n";
