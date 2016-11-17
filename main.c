@@ -126,8 +126,8 @@ int start_scan(char *path)
 	int ret = 0;
 	printk("\nAntivirus started ------->");	
 	if(path!=NULL)	
-		check_for_virus(path);
-	return 0;
+		ret = check_for_virus(path);
+	return ret;
 }
 
 asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {

@@ -77,12 +77,13 @@ bool check_in_whitelist(struct file * input_file,struct file * white_list)
 	int size=PAGE_SIZE;
 	int file_seek_position=0;
 	char *pattern=NULL;
+	char *sha1_hash_file=NULL;	
 	const char *delimiter="\n";
-	loff_t i_size = i_size_read(file_inode(white_list));
 	char * whitelist_buffer=NULL;
+	loff_t i_size = 0;
 	char *init_buffer=kmalloc(size,GFP_KERNEL);
 	init_buffer[0]='\0';
-	char *sha1_hash_file=NULL;
+	i_size = i_size_read(file_inode(white_list));
 	sha1_hash_file=kzalloc(41,GFP_KERNEL);
 	sha1_hash_file[0]='\0';
 	calculate_hash(input_file,sha1_hash_file);
