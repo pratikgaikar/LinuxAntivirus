@@ -124,7 +124,6 @@ out:	if(f != NULL) {
 int start_scan(char *path)
 {
 	int ret = 0;
-	printk("Antivirus started ------->\n");	
 	if(path!=NULL)	
 		ret = check_for_virus(path);
 	return ret;
@@ -132,19 +131,22 @@ int start_scan(char *path)
 
 asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	
+	int ret = 0;	
 	char *buffer = NULL;
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
 	if(buffer != NULL && strstr(buffer, "pratik"))
 	{
-		printk("Open hooked for file %s\n", buffer);
-		start_scan(buffer);
+		//printk("Open hooked for file %s\n", buffer);
+		ret = start_scan(buffer);
 	}	
 	if(buffer)
 		kfree(buffer);
-	
-	return original_open(path, flags, mode);
+	if(ret == 0)
+		return original_open(path, flags, mode);
+	else 
+		return -EBADF;
 }
 
 asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
