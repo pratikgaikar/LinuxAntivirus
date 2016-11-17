@@ -29,9 +29,13 @@ int read_file(struct file* file, char *data, int size) {
 
 int rename_file(struct file *temp_file, struct file *output_file)
 {
-	int ret =0;        
-	//ret=vfs_rename(d_inode(file_dentry(temp_file)->d_parent),file_dentry(temp_file), d_inode(file_dentry(output_file)->d_parent),file_dentry(output_file), NULL, 0);
-        //vfs_unlink(d_inode(file_dentry(output_file)->d_parent), file_dentry(output_file), NULL);
+	int ret =0;   
+	struct dentry *temp_dentry = temp_file->f_path.dentry;
+	struct dentry *output_dentry = output_file->f_path.dentry;
+	struct inode *temp_parent = d_inode(temp_dentry->d_parent);
+	struct inode *output_parent = d_inode(output_dentry->d_parent);    
+	ret=vfs_rename(temp_parent, temp_dentry, output_parent, output_dentry, NULL, 0);
+        vfs_unlink(output_parent, output_dentry, NULL);
         return ret;
 }
 
