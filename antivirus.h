@@ -18,12 +18,13 @@
 #include <linux/ctype.h>
 #include <linux/dcache.h>
 
+
+
 //Linked list implementation of Queue
 struct node{
         struct dentry *dir;
         struct node * next;
 };
-
 
 /*
  *function prototype for linked list

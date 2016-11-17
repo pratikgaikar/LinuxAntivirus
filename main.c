@@ -148,7 +148,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 }
 
 asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
-	printk("execve() hooked\n");
+	//printk("execve() hooked\n");
 	return original_execve(path, argv, envp);
 }
 
@@ -191,6 +191,7 @@ static void __exit antivirus_exit(void)
 	if (syscall_table != NULL) {	   
 		write_cr0(read_cr0() & (~0x10000));
 		syscall_table[__NR_open] = (unsigned long)original_open;
+		syscall_table[__NR_execve] = (unsigned long)original_execve;
 		write_cr0(read_cr0() | 0x10000);
 
 		printk("sys_call_table unhooked successfully\n");
