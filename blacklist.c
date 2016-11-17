@@ -55,12 +55,18 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 			blacklist_size -= strlen(black_list_work_buff);	
 		}
 			
-		parse_virus = strsep(&black_list_work_buff,"\n");
+		if(black_list_work_buff != NULL)
+			parse_virus = strsep(&black_list_work_buff,"\n");
 		
-		virus_name = strsep(&parse_virus,",");
+		if(parse_virus !=NULL)		
+			virus_name = strsep(&parse_virus,",");
 		
-		hex_in_char_ptr=convert(parse_virus, &hex_in_char_len);
-		hex_in_char_ptr[hex_in_char_len]='\0';
+		if(parse_virus !=NULL)	
+		{
+			hex_in_char_ptr=convert(parse_virus, &hex_in_char_len);
+			hex_in_char_ptr[hex_in_char_len]='\0';
+		}
+	
 		file_size=original_file_size;
 		input_file->f_pos=0;
 

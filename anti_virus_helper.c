@@ -47,7 +47,7 @@ int check_for_virus(char *filename)
 		printk("\n%s", virus_file_name);
 		
 		//Open virus file.
-		virus_file = filp_open(virus_file_name, O_CREAT, 0);
+		/*virus_file = filp_open(virus_file_name, O_CREAT, 0);
         	if(IS_ERR(virus_file)) {
 			err = PTR_ERR(virus_file);
                 	printk("\nError in black list file open");
@@ -55,7 +55,7 @@ int check_for_virus(char *filename)
    		}
 		
 		//rename the file.
-		rename_file(input_file,virus_file);			
+		rename_file(input_file,virus_file);*/			
 		goto out;
 	}
 	else
