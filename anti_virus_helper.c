@@ -62,19 +62,19 @@ int check_for_virus(char *filename)
 	}
 out:	
 	/*Close blacklist file */
-	if(black_list)
+	if(black_list != NULL)
 		filp_close(black_list, NULL);
 
 	/*Close whitelist file */
-	if(white_list)
+	if(white_list !=NULL)
 		filp_close(white_list,NULL);
 
 	/*Close input file */
-	if(input_file)
+	if(input_file !=NULL)
 		filp_close(input_file,NULL);
 
 	/*Free memory*/	
-	if(virus_file_name)
+	if(virus_file_name !=NULL)
 		kfree(virus_file_name);		
 	return ret;
 }

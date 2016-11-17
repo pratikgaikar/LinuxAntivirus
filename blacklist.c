@@ -12,10 +12,11 @@ unsigned char gethex(const char *s, char **endptr)
 	return ch;
 }
 
-char *convert(const char *s, int *length)
+void convert(const char *s,char *char_in_hex, int *length)
 {
-	unsigned char *answer = kmalloc(((strlen(s) + 1) / 3) + 1, GFP_KERNEL);
-	unsigned char *p;
+    //unsigned char *answer = kmalloc(((strlen(s) + 1) / 3) + 1, GFP_KERNEL);
+    	unsigned char *answer = char_in_hex;
+    	unsigned char *p;
 	for (p = answer; *s; p++)
 	{
 		*p = gethex(s, (char **)&s);
@@ -44,10 +45,14 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 	original_file_size = i_size_read(file_inode(input_file));
 	black_list_init_buff = kmalloc(PAGE_SIZE,GFP_KERNEL);
 	black_list_init_buff[0]='\0';
-	while(blacklist_size > 0 )
-	{		
-		if(black_list_work_buff == NULL || strlen(black_list_work_buff) == 0)
-		{
+
+	hex_in_char_ptr = kmalloc(PAGE_SIZE,GFP_KERNEL);
+    	hex_in_char_ptr[0]='\0';
+    	while(blacklist_size > 0 )
+    	{        
+        	hex_in_char_ptr[0]='\0';        
+        	if(black_list_work_buff == NULL || strlen(black_list_work_buff) == 0)
+        	{
 			black_list_work_buff = black_list_init_buff;
 			read_blacklist_bytes = read_file(blacklist_file, black_list_work_buff, PAGE_SIZE);
 			blacklist_fp += remove_garbage_value(black_list_work_buff, PAGE_SIZE);
@@ -61,12 +66,12 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		if(parse_virus !=NULL)		
 			virus_name = strsep(&parse_virus,",");
 		
-		if(parse_virus !=NULL)	
-		{
-			hex_in_char_ptr=convert(parse_virus, &hex_in_char_len);
-			hex_in_char_ptr[hex_in_char_len]='\0';
-		}
-	
+		if(parse_virus !=NULL)    
+        	{
+            		convert(parse_virus,hex_in_char_ptr, &hex_in_char_len);
+            		hex_in_char_ptr[hex_in_char_len]='\0';
+        	}
+
 		file_size=original_file_size;
 		input_file->f_pos=0;
 
@@ -91,12 +96,12 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 			input_file_buff[0]='\0';
 		}
 		
-		if(hex_in_char_ptr)
-			kfree(hex_in_char_ptr);			
+				
 	}
 
 	out:	
-			
+	if(hex_in_char_ptr)
+			kfree(hex_in_char_ptr);		
 	
 	if(input_file_buff)
 		kfree(input_file_buff);
