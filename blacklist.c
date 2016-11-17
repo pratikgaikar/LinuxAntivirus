@@ -73,30 +73,24 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		while(file_size > 0 )
 		{			
 			read_file_bytes = read_file(input_file, input_file_buff,  PAGE_SIZE);
-			//printk("Input_file_buffer:%s\n", input_file_buff);
 			if(strstr(input_file_buff, hex_in_char_ptr)!= NULL)
 			{
-				//printk("This is a Virus file\n");
-				//printk("Virus found %s\n",virus_name); 
 				virus_flag = true;				
 				goto out;				
 			}
 			if(input_file->f_pos!=original_file_size)
 			{
-				//printk("Read 35 bytes\n");
-				//printk("1-File position is :%d\n",input_file->f_pos);
 				input_file->f_pos -= (hex_in_char_len);
 				file_size = file_size - read_file_bytes + (hex_in_char_len);
 			}
 			else
 			{
-				//printk("less than 35 bytes read\n");
 				file_size -= read_file_bytes;
-				//printk("2-File position is :%d\n",input_file->f_pos);
+				
 			}
 			input_file_buff[0]='\0';
 		}
-		//printk("This Virus %s was not found\n",virus_name); 
+		
 		if(hex_in_char_ptr)
 			kfree(hex_in_char_ptr);			
 	}
