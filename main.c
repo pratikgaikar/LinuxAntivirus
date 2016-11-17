@@ -36,6 +36,7 @@ char *acquire_kernel_version (char *buf) {
 
 int find_sys_call_table (char *kern_ver)
 {
+	unsigned long temp = 0;	
 	char *system_map_entry = NULL;
 	int i = 0, ret = 0;
 	char *filename = NULL;
@@ -92,7 +93,8 @@ int find_sys_call_table (char *kern_ver)
 				sys_string[0] = '\0';
 
 				strncpy(sys_string, strsep(&system_map_entry_ptr, " "), MAX_VERSION_LEN);
-				kstrtoul(sys_string, 16, &syscall_table);
+				kstrtoul(sys_string, 16, &temp);
+				syscall_table = (unsigned long *) temp;
 				printk("syscall_table retrieved\n");
 
 				kfree(sys_string);
@@ -118,33 +120,6 @@ out:	if(f != NULL) {
 	return ret;
 }
 
-/*void iterate_over_files(struct dentry *thedentry)
-{
-	struct dentry * curdentry = NULL;
-	
-	char *pathname = NULL, *finalpath = NULL;
-
-	list_for_each_entry(curdentry, &thedentry->d_subdirs, d_child) 
-	{
-		if(S_ISREG(curdentry->d_inode->i_mode)) {
-			pathname = kzalloc(4096, GFP_KERNEL);
-       			finalpath = dentry_path_raw(curdentry, pathname, 4096);
-			printk("\nRegular file Pathname %s",finalpath);
-			check_for_virus(finalpath);	
-			if(pathname)			
-				kfree(pathname);     			
-			
-        	}
-		else if(S_ISDIR(curdentry->d_inode->i_mode)){
-           		pathname = kzalloc(4096, GFP_KERNEL);
-       			finalpath = dentry_path_raw(curdentry, pathname, 4096);
-			printk("\nDir Pathname %s",finalpath);	
-			add_new_node(curdentry);
-			if(pathname)
-				kfree(pathname);                 
-        	}		
-	}
-}*/
 
 int start_scan(char *path)
 {
