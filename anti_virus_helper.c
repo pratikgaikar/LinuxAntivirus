@@ -37,10 +37,10 @@ int check_for_virus(char *filename)
 	}
 	/* Check for virus content */
 	is_virus=check_in_blacklist(input_file,black_list);
-	/*if(is_virus)
+	if(is_virus)
 	{
 		printk("\nVIRUS FOUND IN FILE %s", filename);
-		virus_file_name = kmalloc(PAGE_SIZE,GFP_KERNEL);
+		/*virus_file_name = kmalloc(PAGE_SIZE,GFP_KERNEL);
 		strcpy(virus_file_name,filename);
 		strcat(virus_file_name,".virus");
 		virus_file_name[strlen(virus_file_name)]='\0';
@@ -57,8 +57,8 @@ int check_for_virus(char *filename)
 		//rename the file.
 		rename(input_file,visrus_file);	
 		
-		goto out;
-	}*/
+		goto out;*/
+	}
 out:	
 	/*Close blacklist file */
 	if(black_list)
