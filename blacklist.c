@@ -114,4 +114,3 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 	return virus_flag;
 }
 
-

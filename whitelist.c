@@ -28,16 +28,18 @@ int calculate_hash(struct file *input_file,char *sha1_hash)
 	loff_t i_size, offset = 0;
 	char *file_buf=NULL;
 	unsigned char * digest=NULL;
-	int rc,i;
+	int rc = 0,i;
 	rc = init_desc(&desc);
 	digest=kzalloc(crypto_hash_crt(desc.tfm)->digestsize,GFP_KERNEL);
 	
 	if (rc != 0)
+	{
+		rc =-1;
 		goto out;
-
+	}
 	file_buf = kzalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!file_buf) {
-		rc = ENOMEM;
+		rc = -ENOMEM;
 		goto out;
 	}
 	i_size = i_size_read(input_file->f_path.dentry->d_inode);
@@ -66,27 +68,38 @@ int calculate_hash(struct file *input_file,char *sha1_hash)
 		
 out:
 	crypto_free_hash(desc.tfm);
-	kfree(digest);
-	kfree(file_buf);
+	if(digest)	
+		kfree(digest);
+	if(file_buf)	
+		kfree(file_buf);
 	return rc;
 }
 
 bool check_in_whitelist(struct file * input_file,struct file * white_list)
 {
 	bool in_whitelist=false;
-	int size=PAGE_SIZE;
-	int file_seek_position=0;
-	char *pattern=NULL;
-	char *sha1_hash_file=NULL;	
+	int size=PAGE_SIZE,file_seek_position=0;
+	char *pattern=NULL,*sha1_hash_file=NULL,*whitelist_buffer=NULL,*init_buffer = NULL;
 	const char *delimiter="\n";
-	char * whitelist_buffer=NULL;
 	loff_t i_size = 0;
-	char *init_buffer=kmalloc(size,GFP_KERNEL);
+	init_buffer = kmalloc(size,GFP_KERNEL);
+	
+	if(init_buffer == NULL)
+		goto out;
+		
 	init_buffer[0]='\0';
 	i_size = i_size_read(file_inode(white_list));
+	
 	sha1_hash_file=kzalloc(41,GFP_KERNEL);
+	if(sha1_hash_file==NULL)
+		goto out;	
 	sha1_hash_file[0]='\0';
-	calculate_hash(input_file,sha1_hash_file);
+
+	if(calculate_hash(input_file,sha1_hash_file) < 0)
+	{
+		goto out;
+	}
+	
 	while(i_size>0)
 	{
 		if(pattern==NULL)
