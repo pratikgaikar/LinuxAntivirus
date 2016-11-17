@@ -138,8 +138,8 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	copy_from_user(buffer, path, 4096);
 	//if(buffer != NULL && strstr(buffer, "pratik"))
 	{
-		printk("Open hooked for file %s\n", buffer);
-		//ret = start_scan(buffer);
+		//printk("Open hooked for file %s\n", buffer);
+		ret = start_scan(buffer);
 	}	
 	if(buffer)
 		kfree(buffer);
