@@ -23,7 +23,7 @@ int check_for_virus(char *filename)
 
 	input_file = filp_open(filename, O_RDONLY, 0);
         if(IS_ERR(input_file)) {
-                printk("\nError in input file open");
+                printk("\nError in input file open %s", filename);
 		ret = PTR_ERR(input_file);
 		goto out;
         }
