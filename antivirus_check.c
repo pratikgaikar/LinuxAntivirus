@@ -59,26 +59,31 @@ int main(int argc, char **argv)
 int process(const char *file, const struct stat *sb,
 	    int flag, struct FTW *s)
 {
-	int retval = 0;
-	
+	int retval = 0,rc=0;
+	char *buf=NULL;
 	switch (flag) {
 	case FTW_SL:
-		//printf("%s (symlink)\n", file);			
-		char buf[PATH_MAX + 1];
+		buf=malloc(4096);		
 		realpath(file, buf);
-		//printf("%s (realpath)\n", buf);			
-		file=buf;
+		file=buf;	
 	case FTW_F:
-		printf("%s (file)\n", file);
+		printf("%s (file)\n", file);		
 		if(strstr(file, ".virus")!=NULL) {	
-			//printf("File %s is a virus file\n", file);		
-			errno=9;
+			printf("File %s is a virus file\n", file);
+			rc=-9;
 		} else {
-			retval = open(file,O_RDONLY);
+			rc= open(file,O_RDONLY);
 			printf("Return value: %d \t errno : %d\n", retval,errno);
+			if(retval>0)
+			{
+				close(retval);
+			}
+
 		}
+		if(buf!=NULL)
+		  free(buf);
 		break;
-	/*case FTW_D:		
+	case FTW_D:		
 		//printf("%s (directory)\n", name);
 		break;
 	case FTW_DNR:
@@ -93,28 +98,19 @@ int process(const char *file, const struct stat *sb,
 		//printf("%s: FTW_DP or FTW_SLN: can't happen!\n", name);
 		retval = 1;
 		break;
-	*/
 	default:
 		//printf("%s: unknown flag %d: can't happen!\n", name, flag);
 		retval = 1;
 		break;
 	}
-	if(errno==9)
+	if (rc==-9)
 	{
-		//Notify
-		char *name="File.txt";
-		char command[100], msg[100];
-		
+		char command[4200], msg[4200];
 		strcpy(command,"notify-send ");
 		strcpy(msg,"\"VIRUS FOUND: \"");
-		strcat(msg,name);
+		strcat(msg,file);
 		strcat(command,msg);
-//system("/usr/bin/notify-send MessageSubject: \"Virus file :\"%s", name);
-//system("/usr/bin/notify-send MessageSubject 'tail $name' -t 5000");
-//system("/usr/bin/notify-send Cron message $i" done);
-//system("/usr/bin/notify-send Test "<font size=16 color=blue><b><i>Hello World</b></i></font>);
-//system("/usr/bin/xmessage");
-system(command);
+		system(command);		
 	}
 	return retval;
 }
