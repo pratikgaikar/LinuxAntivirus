@@ -174,14 +174,14 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	if(ret == 0)
 	{
 		if(buffer)
-		kfree(buffer);
+			kfree(buffer);
 		return original_open(path, flags, mode);
 	}	
 	else 
 	{
 		send_to_user(buffer); // send using socket
 		if(buffer)
-		kfree(buffer);
+			kfree(buffer);
 		return -EBADF;
 	}
 }
@@ -194,21 +194,19 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	copy_from_user(buffer, path, 4096);
 	
 	printk("Execve hooked for file %s\n", buffer);
-	ret = start_scan(buffer);
-
-	if(buffer != NULL)
-		kfree(buffer);
+	//ret = start_scan(buffer);
+	
 	if(ret == 0)
 	{
 		if(buffer)
-		kfree(buffer);
+			kfree(buffer);
 		return original_execve(path, argv, envp);
 	}	
 	else 
 	{
 		send_to_user(buffer); // send using socket
 		if(buffer)
-		kfree(buffer);
+			kfree(buffer);
 		return -EBADF;
 	}
 }
@@ -223,19 +221,17 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	printk("Execveat hooked for file %s\n", buffer);
 	ret = start_scan(buffer);
 
-	if(buffer != NULL)
-		kfree(buffer);
 	if(ret == 0)
 	{
 		if(buffer)
-		kfree(buffer);
+			kfree(buffer);
 		return original_execveat(dfd, filename, argv, envp, flags);
 	}	
 	else 
 	{
 		send_to_user(buffer); // send using socket
 		if(buffer)
-		kfree(buffer);
+			kfree(buffer);
 		return -EBADF;
 	}
 }
