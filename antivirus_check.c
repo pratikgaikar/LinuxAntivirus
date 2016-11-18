@@ -59,21 +59,35 @@ int main(int argc, char **argv)
 int process(const char *file, const struct stat *sb,
 	    int flag, struct FTW *s)
 {
-	int retval = 0;
-	const char *name = file + s->base;
+	int retval = 0,rc=0;
+	char *buf=NULL;
 	switch (flag) {
+	case FTW_SL:
+		buf=malloc(4096);		
+		realpath(file, buf);
+		file=buf;	
 	case FTW_F:
-		printf("%s (file)\n", file);
-		open(file,O_RDONLY);
+		printf("%s (file)\n", file);		
+		if(strstr(file, ".virus")!=NULL) {	
+			printf("File %s is a virus file\n", file);
+			rc=-9;
+		} else {
+			rc= open(file,O_RDONLY);
+			printf("Return value: %d \t errno : %d\n", retval,errno);
+			if(retval>0)
+			{
+				close(retval);
+			}
+
+		}
+		if(buf!=NULL)
+		  free(buf);
 		break;
 	case FTW_D:		
 		//printf("%s (directory)\n", name);
 		break;
 	case FTW_DNR:
 		//printf("%s (unreadable directory)\n", name);
-		break;
-	case FTW_SL:
-		open(file,O_RDONLY);		
 		break;
 	case FTW_NS:
 		//printf("%s (stat failed): %s\n", name, strerror(errno));
@@ -88,6 +102,15 @@ int process(const char *file, const struct stat *sb,
 		//printf("%s: unknown flag %d: can't happen!\n", name, flag);
 		retval = 1;
 		break;
+	}
+	if (rc==-9)
+	{
+		char command[4200], msg[4200];
+		strcpy(command,"notify-send ");
+		strcpy(msg,"\"VIRUS FOUND: \"");
+		strcat(msg,file);
+		strcat(command,msg);
+		system(command);		
 	}
 	return retval;
 }
