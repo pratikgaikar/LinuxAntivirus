@@ -1,5 +1,4 @@
 #include"antivirus.h"
-
 int check_for_virus(char *filename)
 {
 	int ret = 0;
@@ -8,7 +7,7 @@ int check_for_virus(char *filename)
 	char *virus_file_name = NULL;
 	struct inode *inode;
 	umode_t im;
-
+	
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         if(IS_ERR(black_list)) {
 		ret = PTR_ERR(black_list);
@@ -51,7 +50,7 @@ int check_for_virus(char *filename)
 	in_whitelist=check_in_whitelist(input_file,white_list);
 	if(in_whitelist)
 	{
-		printk("\n%s FILE IS GOOD, FOUND IN WHITELIST.", filename);		
+		printk("\n%sFOUND IN WHITELIST.", filename);		
 		goto out;
 	}
 	/* Check for virus content */
@@ -97,5 +96,3 @@ out:
 		kfree(virus_file_name);		
 	return ret;
 }
-
-
