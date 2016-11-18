@@ -18,22 +18,6 @@
 #include <linux/ctype.h>
 #include <linux/dcache.h>
 
-
-//Linked list implementation of Queue
-struct node{
-        struct dentry *dir;
-        struct node * next;
-};
-
-/*
- *function prototype for linked list
- */
-void add_new_node(struct dentry *dir);
-struct dentry *delete_node(void*);
-int is_empty(void*);
-void status_link(void *test);
-
-
 /*
  *function prototype for linked list
  */
@@ -55,4 +39,5 @@ bool check_in_blacklist(struct file * input_file,struct file * black_list);
 int remove_garbage_value(char *data, int pagesize);
 int read_file(struct file* file, char *data, int size);
 int rename_file(struct file *temp_file, struct file *output_file);
+
 #endif

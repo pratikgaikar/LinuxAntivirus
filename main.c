@@ -1,12 +1,40 @@
 #include"antivirus.h"
 
+#include <linux/netlink.h>
+#include <net/netlink.h>
+#include <net/net_namespace.h>
+
 #define PROC_V    "/proc/version"
 #define BOOT_PATH "/boot/System.map-"
 #define MAX_VERSION_LEN   256
+#define MYPROTO NETLINK_USERSOCK
+#define MYGRP 21
 
+static struct sock *nl_sk = NULL;
 unsigned long *syscall_table = NULL; 
 asmlinkage long (*original_open) (const char __user *, int, umode_t);
 asmlinkage long (*original_execve) (const char __user *, const char __user *, const char __user *);
+
+/* send virus file name to user*/
+static void send_to_user(char *msg)
+{
+    struct sk_buff *skb;
+    struct nlmsghdr *nlh;
+    int msg_size = strlen(msg) + 1;
+    int res;
+    skb = nlmsg_new(NLMSG_ALIGN(msg_size + 1), GFP_KERNEL);
+    if (!skb) {
+        pr_err("Allocation failure.\n");
+        return;
+    }
+    nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
+    strcpy(nlmsg_data(nlh), msg);    
+    res = nlmsg_multicast(nl_sk, skb, 0, MYGRP, GFP_KERNEL);
+    if (res < 0)
+        pr_info("nlmsg_multicast() error: %d\n", res);
+    else
+        pr_info("Success.\n");
+}
 
 char *acquire_kernel_version (char *buf) {
 	struct file *proc_version = NULL;
@@ -28,9 +56,7 @@ char *acquire_kernel_version (char *buf) {
 	if(proc_version != NULL) {
 		filp_close(proc_version, 0);
 	}
-
 	set_fs(oldfs);
-	printk("Kernel version: %s\n", kernel_version);
 	return kernel_version;
 }
 
@@ -95,8 +121,6 @@ int find_sys_call_table (char *kern_ver)
 				strncpy(sys_string, strsep(&system_map_entry_ptr, " "), MAX_VERSION_LEN);
 				kstrtoul(sys_string, 16, &temp);
 				syscall_table = (unsigned long *) temp;
-				printk("syscall_table retrieved\n");
-
 				kfree(sys_string);
 				break;
 				}
@@ -120,7 +144,6 @@ out:	if(f != NULL) {
 	return ret;
 }
 
-
 int start_scan(char *path)
 {
 	int ret = 0;
@@ -136,17 +159,27 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	//if(buffer != NULL && strstr(buffer, "pratik"))
+	//printk("Open hooked for file %s\n", buffer);
+	if(buffer != NULL && strstr(buffer, "pratik"))
+	//if( strstr(buffer,"dev") == NULL && (strstr(buffer,"lib") == NULL)) 
 	{
 		//printk("Open hooked for file %s\n", buffer);
 		ret = start_scan(buffer);
+		
 	}	
-	if(buffer)
-		kfree(buffer);
 	if(ret == 0)
+	{
+		if(buffer)
+		kfree(buffer);
 		return original_open(path, flags, mode);
+	}	
 	else 
+	{
+		send_to_user(buffer); // send using socket
+		if(buffer)
+		kfree(buffer);
 		return -EBADF;
+	}
 }
 
 asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
@@ -181,6 +214,12 @@ static int __init antivirus_init(void)
 			printk("syscall_table is NULL\n");
 		}
 	}
+	
+	nl_sk = netlink_kernel_create(&init_net, MYPROTO, NULL);
+    	if (!nl_sk) {
+        	pr_err("Error creating socket.\n");
+        	return -10;
+    	}
 out:	
 	if(kernel_version != NULL) {
 		kfree(kernel_version);
@@ -201,6 +240,8 @@ static void __exit antivirus_exit(void)
 	else {
 		printk("syscall_table is NULL\n");
 	}	
+	send_to_user("EXIT"); // send using socket
+	netlink_kernel_release(nl_sk);
 }
 
 MODULE_LICENSE("GPL");

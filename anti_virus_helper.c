@@ -6,11 +6,14 @@ int check_for_virus(char *filename)
 	struct file *black_list= NULL, *input_file = NULL, *white_list = NULL, *virus_file = NULL;
 	bool in_whitelist=false ,is_virus=false;
 	char *virus_file_name = NULL;
+	struct inode *inode;
+	umode_t im;
 
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         if(IS_ERR(black_list)) {
 		ret = PTR_ERR(black_list);
-                printk("\nError in black list file open");
+		printk("\nError in black list file open");
+		black_list = NULL;		
 		goto out;
         }
 
@@ -18,6 +21,7 @@ int check_for_virus(char *filename)
         if(IS_ERR(white_list)) {
                 printk("\nError in black list file open");
 		ret = PTR_ERR(white_list);	
+		white_list = NULL;
 		goto out;
         }
 
@@ -25,14 +29,29 @@ int check_for_virus(char *filename)
         if(IS_ERR(input_file)) {
                 printk("\nError in input file open %s", filename);
 		ret = PTR_ERR(input_file);
+		input_file = NULL;
 		goto out;
         }
+	
+	inode = file_inode(input_file);
+    	if(inode != NULL)
+	{    
+        	im = inode->i_mode;
+        	if(S_ISCHR(im) > 0)
+		{
+            		goto out;
+        	}
+        	if(S_ISBLK(im) > 0) 
+		{
+            		goto out;
+        	}
+    	}
 
 	/* Check for whitelist*/
 	in_whitelist=check_in_whitelist(input_file,white_list);
 	if(in_whitelist)
 	{
-		printk("\n%s FILE IS GOOD FOUND IN WHITELIST.", filename);		
+		printk("\n%s FILE IS GOOD, FOUND IN WHITELIST.", filename);		
 		goto out;
 	}
 	/* Check for virus content */

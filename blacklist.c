@@ -22,7 +22,7 @@ void convert(const char *s,char *char_in_hex, int *length)
 		*p = gethex(s, (char **)&s);
 	}
 	*length = p - answer;
-	return answer;
+	//return answer;
 }
 
 
