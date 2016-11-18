@@ -164,7 +164,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
 	//printk("Open hooked for file %s\n", buffer);
-	//if(buffer != NULL && strstr(buffer, "pratik"))
+	if(buffer != NULL && strstr(buffer, "pratik"))
 	//if( strstr(buffer,"dev") == NULL && (strstr(buffer,"lib") == NULL)) 
 	{
 		//printk("Open hooked for file %s\n", buffer);
@@ -194,7 +194,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	copy_from_user(buffer, path, 4096);
 	
 	printk("Execve hooked for file %s\n", buffer);
-	//ret = start_scan(buffer);
+	ret = start_scan(buffer);
 	
 	if(ret == 0)
 	{
@@ -237,7 +237,7 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 }
 
 asmlinkage long new_open_by_handle_at(int mountdirfd, struct file_handle __user *handle, int flags) {
-	printk("New Open By Handle At hooked\n");
+	//printk("New Open By Handle At hooked\n");
 	return original_open_by_handle_at(mountdirfd, handle, flags);
 }
 
