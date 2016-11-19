@@ -43,7 +43,8 @@ int main(int argc, char **argv)
 			fprintf(stderr, "%s: %s: Not a valid filename/directory\n",
 				argv[0], argv[i]);
 			}
-		//free(filePath);
+		if(filePath!=NULL)		
+			free(filePath);
 	}
 
 	if ((flags & FTW_CHDIR) != 0) {
@@ -61,23 +62,32 @@ int process(const char *file, const struct stat *sb,
 {
 	int retval = 0,rc=0;
 	char *buf=NULL;
+	char command[4200], msg1[4200];
 	switch (flag) {
 	case FTW_SL:
 		buf=malloc(4096);		
 		realpath(file, buf);
 		file=buf;	
 	case FTW_F:
-		printf("%s (file)\n", file);		
+		printf("scanning file %s\n", file);		
 		if(strstr(file, ".virus")!=NULL) {	
-			printf("File %s is a virus file\n", file);
-			rc=-9;
+			//printf("File %s is a virus file\n", file);
+			strcpy(command,"notify-send ");
+                	strcpy(msg1,"\"VIRUS file found: \"");
+                	strcat(msg1,file);
+			strcat(msg1,"\"  cannot open \"");
+                	strcat(command,msg1);
+                	system(command);
+			
 		} else {
-			rc= open(file,O_RDONLY);
-			printf("Return value: %d \t errno : %d\n", retval,errno);
-			if(rc>-1)
-			{
+			retval= open(file,O_RDONLY);
+			//printf("Return value: %d \t errno : %d\n", retval,errno);
+			if(retval>-1)
+			{	
+				printf("No virus found\n");
 				close(retval);
 			}
+			retval=0;
 
 		}
 		if(buf!=NULL)
