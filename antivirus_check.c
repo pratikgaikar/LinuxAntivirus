@@ -38,12 +38,12 @@ int main(int argc, char **argv)
 		{
 		   strcat(filePath,argv[i]);
 		}
-		//printf("FilePath=%s\n",filePath);
-		if (nftw(filePath, process, nfds, flags) != 0) {
+		printf("FilePath=%s\n",filePath);
+		if (nftw(argv[i], process, nfds, flags) != 0) {
 			fprintf(stderr, "%s: %s: Not a valid filename/directory\n",
 				argv[0], argv[i]);
 			}
-		free(filePath);
+		//free(filePath);
 	}
 
 	if ((flags & FTW_CHDIR) != 0) {
@@ -74,7 +74,7 @@ int process(const char *file, const struct stat *sb,
 		} else {
 			rc= open(file,O_RDONLY);
 			printf("Return value: %d \t errno : %d\n", retval,errno);
-			if(retval>0)
+			if(rc>-1)
 			{
 				close(retval);
 			}
@@ -103,15 +103,6 @@ int process(const char *file, const struct stat *sb,
 		retval = 1;
 		break;
 	}
-	if (rc==-9)
-	{
-		char command[4200], msg[4200];
-		strcpy(command,"notify-send ");
-		strcpy(msg,"\"VIRUS FOUND: \"");
-		strcat(msg,file);
-		strcat(command,msg);
-		system(command);		
-	}
+	
 	return retval;
 }
-

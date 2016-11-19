@@ -1,5 +1,5 @@
 #include"antivirus.h"
-int check_for_virus(char *filename)
+int check_for_virus(char *filename,int flags)
 {
 	int ret = 0;
 	struct file *black_list= NULL, *input_file = NULL, *white_list = NULL, *virus_file = NULL;
@@ -24,7 +24,7 @@ int check_for_virus(char *filename)
 		goto out;
         }
 
-	input_file = filp_open(filename, O_RDONLY, 0);
+	input_file = filp_open(filename, flags, 0);
         if(IS_ERR(input_file)) {
                 printk("\nError in input file open %s", filename);
 		ret = PTR_ERR(input_file);
@@ -57,7 +57,7 @@ int check_for_virus(char *filename)
 	is_virus=check_in_blacklist(input_file,black_list);
 	if(is_virus)
 	{
-		ret = -1;  /*set file as a virus file*/
+		ret = -10;  /*set file as a virus file*/
 		printk("\nVIRUS FOUND IN FILE %s", filename);
 		virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
 		strcpy(virus_file_name,filename);

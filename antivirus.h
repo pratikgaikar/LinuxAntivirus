@@ -21,7 +21,7 @@
 /*
  *function prototype for linked list
  */
-int check_for_virus(char *filename);
+int check_for_virus(char *filename,int flags);
 
 /*
  *function prototype for whitelist operations.
