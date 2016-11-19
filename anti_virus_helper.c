@@ -26,8 +26,7 @@ int check_for_virus(char *filename,int flags)
 
 	input_file = filp_open(filename, flags, 0);
         if(IS_ERR(input_file)) {
-                printk("\nError in input file open %s", filename);
-		ret = PTR_ERR(input_file);
+                //printk("\nError in input file open %s", filename);
 		input_file = NULL;
 		goto out;
         }
@@ -50,7 +49,7 @@ int check_for_virus(char *filename,int flags)
 	in_whitelist=check_in_whitelist(input_file,white_list);
 	if(in_whitelist)
 	{
-		printk("\n%sFOUND IN WHITELIST.", filename);		
+		//printk("\n%sFOUND IN WHITELIST.", filename);		
 		goto out;
 	}
 	/* Check for virus content */
@@ -63,20 +62,19 @@ int check_for_virus(char *filename,int flags)
 		strcpy(virus_file_name,filename);
 		strcat(virus_file_name,".virus");
 		virus_file_name[strlen(virus_file_name)]='\0';
-		/*virus_file = filp_open(virus_file_name, O_CREAT, 0);
+		virus_file = filp_open(virus_file_name, O_CREAT, 0);
         	if(IS_ERR(virus_file)) {
 			ret = PTR_ERR(virus_file);
-                	printk("\nError in black list file open");
+                	printk("\nError in virus rename list file open");
 			goto out;
-   		}*/
-
+   		}
 		//rename the file.
-		//rename_file(input_file,virus_file);			
+		rename_file(input_file,virus_file);			
 		goto out;
 	}
 	else
 	{
-		printk("\n %s File is Good ",filename);
+		//printk("\n %s File is Good ",filename);
 	}
 out:	
 	/*Close blacklist file */
