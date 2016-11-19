@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. updateAntivirus.properties
+. antivirus.config
 function update
 {
 cd $path
