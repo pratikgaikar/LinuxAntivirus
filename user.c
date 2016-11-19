@@ -55,16 +55,18 @@ int read_event(int sock)
         	printf("ret < 0.\n");
     	else
 	{
-        	//printf("Received message: %s\n", NLMSG_DATA((struct nlmsghdr *) &buffer));
-		strcpy(command,"notify-send ");
-                strcpy(msg1,"\"VIRUS FOUND: \"");
-                strcat(msg1,NLMSG_DATA((struct nlmsghdr *) &buffer));
-                strcat(command,msg1);
-                system(command);
-		if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"EXIT")==0)
+        	if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"EXIT")==0)
 		{
 			printf("\nShould exit");
-			//exit(0);
+			exit(0);
+		}
+		else
+		{
+			strcpy(command,"notify-send ");
+                	strcpy(msg1,"\"VIRUS FOUND: \"");
+                	strcat(msg1,NLMSG_DATA((struct nlmsghdr *) &buffer));
+                	strcat(command,msg1);
+                	system(command);
 		}	
 	}
 }
