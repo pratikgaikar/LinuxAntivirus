@@ -87,6 +87,10 @@ int process(const char *file, const struct stat *sb,
 				printf("No virus found\n");
 				close(retval);
 			}
+			else
+			{
+				printf("Virus found\n");
+			}
 			retval=0;
 
 		}

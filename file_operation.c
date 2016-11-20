@@ -1,9 +1,9 @@
 #include"antivirus.h"
 
-int remove_garbage_value(char *data, int pagesize)
+int remove_garbage_value(char *data, int recordsize)
 {
-        int i= strlen(data)-1;
-        if(data[i]!='\n' || data[i]!='\0')
+	int i= recordsize-1;
+        if(data[i]!='\n' && data[i]!='\0')
         {
                 while(i>0)
                 {
@@ -12,7 +12,7 @@ int remove_garbage_value(char *data, int pagesize)
                         i--;
                 }
         }
-        if(i < pagesize && data[i]!='\0')
+        if((i+1) < PAGE_SIZE && data[i]!='\0')
                 data[++i]='\0';
         return strlen(data);
 }
