@@ -1,5 +1,5 @@
 #include"antivirus.h"
-int check_for_virus(char *filename,int flags)
+int check_for_virus(char *filename,int flags, umode_t mode)
 {
 	int ret = 0;
 	struct file *black_list= NULL, *input_file = NULL, *white_list = NULL, *virus_file = NULL;
@@ -24,7 +24,7 @@ int check_for_virus(char *filename,int flags)
 		goto out;
         }
 
-	input_file = filp_open(filename, flags, 0);
+	input_file = filp_open(filename, flags, mode);
         if(IS_ERR(input_file)) {
                 //printk("\nError in input file open %s", filename);
 		input_file = NULL;
@@ -44,7 +44,7 @@ int check_for_virus(char *filename,int flags)
             		goto out;
         	}
     	}
-
+	
 	/* Check for whitelist*/
 	in_whitelist=check_in_whitelist(input_file,white_list);
 	if(in_whitelist)
@@ -62,7 +62,7 @@ int check_for_virus(char *filename,int flags)
 		strcpy(virus_file_name,filename);
 		strcat(virus_file_name,".virus");
 		virus_file_name[strlen(virus_file_name)]='\0';
-		virus_file = filp_open(virus_file_name, O_CREAT, 0);
+		virus_file = filp_open(virus_file_name, O_CREAT, 0000);
         	if(IS_ERR(virus_file)) {
 			ret = PTR_ERR(virus_file);
                 	printk("\nError in virus rename list file open");

@@ -24,14 +24,14 @@ static void send_to_user(char *msg)
     int res;
     skb = nlmsg_new(NLMSG_ALIGN(msg_size + 1), GFP_KERNEL);
     if (!skb) {
-        pr_err("Allocation failure.\n");
+        pr_err("Allocation failure\n");
         return;
     }
     nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
     strcpy(nlmsg_data(nlh), msg);    
     res = nlmsg_multicast(nl_sk, skb, 0, MYGRP, GFP_KERNEL);
     /*if (res < 0)
-        pr_info("nlmsg_multicast() error: %d\n", res);
+        pr_info("nlmsg_multicast(). error: %d\n", res);
     else
         pr_info("Success.\n");*/
 }
@@ -144,22 +144,35 @@ out:	if(f != NULL) {
 	return ret;
 }
 
-int start_scan(char *path,int flags)
+int start_scan(char *path,int flags, umode_t mode)
 {
 	int ret = 0;
 	if(path!=NULL)	
-		ret = check_for_virus(path,flags);
+		ret = check_for_virus(path,flags, mode);
 	return ret;
 }
 
 asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
-	
 	int ret = 0;	
 	char *buffer = NULL;
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	ret = start_scan(buffer,flags);
+
+	if(strstr(buffer,".virus")!=NULL) {
+		printk("Cannot open this file: %s. It contains malicious content\n", buffer);
+		return -EBADF;
+	}
+	if(flags > 32768) {
+		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
+		return original_open(path, flags, mode);
+	}
+	
+	/*if(strstr(buffer,"testfile1")!=NULL) {
+		ret = start_scan(buffer,flags,mode);
+	}*/
+
+	ret = start_scan(buffer,O_RDONLY,0);
 	if(ret == 0)
 	{
 		if(buffer)
@@ -173,6 +186,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	if(buffer)
 		kfree(buffer);
 	return -EBADF;
+	//return original_open(path, flags, mode);
 }
 
 asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
@@ -182,7 +196,13 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
 	printk("Execve hooked for file %s\n", buffer);
-	ret = start_scan(buffer,O_RDONLY);
+
+	if(strstr(buffer,".virus")!=NULL) {
+		printk("Cannot open this file: %s. It contains malicious content\n", buffer);
+		return -EBADF;
+	}
+
+	ret = start_scan(buffer,O_RDONLY,0);
 	if(ret == 0)
 	{
 		if(buffer)

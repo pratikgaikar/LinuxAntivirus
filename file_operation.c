@@ -33,8 +33,11 @@ int rename_file(struct file *temp_file, struct file *output_file)
 	struct dentry *temp_dentry = temp_file->f_path.dentry;
 	struct dentry *output_dentry = output_file->f_path.dentry;
 	struct inode *temp_parent = d_inode(temp_dentry->d_parent);
-	struct inode *output_parent = d_inode(output_dentry->d_parent);    
-	ret=vfs_rename(temp_parent, temp_dentry, output_parent, output_dentry, NULL, 0);
+	struct inode *output_parent = d_inode(output_dentry->d_parent);
+	struct inode *temp_inode = d_inode(temp_dentry);    
+	
+	ret=vfs_rename(temp_parent, temp_dentry, output_parent, output_dentry, NULL, 0);	
+	temp_inode->i_mode = temp_inode->i_mode & 0000;
         vfs_unlink(output_parent, output_dentry, NULL);
         return ret;
 }
