@@ -7,10 +7,9 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 	char *virus_file_name = NULL;
 	struct inode *inode;
 	umode_t im;
-	printk("\nSCANNING %s", filename);
+	
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         if(IS_ERR(black_list)) {
-		//ret = PTR_ERR(black_list);
 		printk("\nError in black list file open");
 		black_list = NULL;		
 		goto out;
@@ -19,7 +18,6 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 	white_list = filp_open("/etc/antivirusfiles/whitelist", O_RDONLY, 0);
         if(IS_ERR(white_list)) {
                 printk("\nError in black list file open");
-		//ret = PTR_ERR(white_list);	
 		white_list = NULL;
 		goto out;
         }

@@ -57,7 +57,6 @@ int read_event(int sock)
 	{
         	if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"EXIT")==0)
 		{
-			printf("\nShould exit");
 			exit(0);
 		}
 		else
