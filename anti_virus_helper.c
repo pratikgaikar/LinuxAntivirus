@@ -7,7 +7,7 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 	char *virus_file_name = NULL;
 	struct inode *inode;
 	umode_t im;
-	
+	printk("\nSCANNING %s", filename);
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         if(IS_ERR(black_list)) {
 		//ret = PTR_ERR(black_list);
@@ -56,7 +56,7 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 	if(is_virus)
 	{
 		ret = -10;  /*set file as a virus file*/
-		//printk("\nVIRUS FOUND IN FILE %s", filename);
+		printk("\nVIRUS FOUND IN FILE %s", filename);
 		/*virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
 		strcpy(virus_file_name,filename);
 		strcat(virus_file_name,".virus");

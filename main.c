@@ -185,8 +185,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	}
 	if(buffer)
 		kfree(buffer);
-	return -EBADF;
-	//return original_open(path, flags, mode);
+	return -EBADF;	
 }
 
 asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
