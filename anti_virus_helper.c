@@ -10,7 +10,7 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 	
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         if(IS_ERR(black_list)) {
-		ret = PTR_ERR(black_list);
+		//ret = PTR_ERR(black_list);
 		printk("\nError in black list file open");
 		black_list = NULL;		
 		goto out;
@@ -19,15 +19,14 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 	white_list = filp_open("/etc/antivirusfiles/whitelist", O_RDONLY, 0);
         if(IS_ERR(white_list)) {
                 printk("\nError in black list file open");
-		ret = PTR_ERR(white_list);	
+		//ret = PTR_ERR(white_list);	
 		white_list = NULL;
 		goto out;
         }
 
 	input_file = filp_open(filename, flags, mode);
         if(IS_ERR(input_file)) {
-                //printk("\nError in input file open %s", filename);
-		input_file = NULL;
+                input_file = NULL;
 		goto out;
         }
 	
@@ -57,8 +56,8 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 	if(is_virus)
 	{
 		ret = -10;  /*set file as a virus file*/
-		printk("\nVIRUS FOUND IN FILE %s", filename);
-		virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
+		//printk("\nVIRUS FOUND IN FILE %s", filename);
+		/*virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
 		strcpy(virus_file_name,filename);
 		strcat(virus_file_name,".virus");
 		virus_file_name[strlen(virus_file_name)]='\0';
@@ -69,12 +68,8 @@ int check_for_virus(char *filename,int flags, umode_t mode)
 			goto out;
    		}
 		//rename the file.
-		rename_file(input_file,virus_file);			
+		rename_file(input_file,virus_file);*/			
 		goto out;
-	}
-	else
-	{
-		//printk("\n %s File is Good ",filename);
 	}
 out:	
 	/*Close blacklist file */

@@ -172,7 +172,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 		ret = start_scan(buffer,flags,mode);
 	}*/
 
-	ret = start_scan(buffer,O_RDONLY,0);
+	ret = start_scan(buffer,flags,mode);
 	if(ret == 0)
 	{
 		if(buffer)
@@ -195,8 +195,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	printk("Execve hooked for file %s\n", buffer);
-
+	
 	if(strstr(buffer,".virus")!=NULL) {
 		printk("Cannot open this file: %s. It contains malicious content\n", buffer);
 		return -EBADF;
@@ -207,7 +206,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	{
 		if(buffer)
 			kfree(buffer);
-		printk("Return to original exe\n");
+		//printk("Return to original exe\n");
 		return original_execve(path, argv, envp);
 	}	
 	else if(ret == -10)
