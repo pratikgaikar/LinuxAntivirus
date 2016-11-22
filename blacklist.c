@@ -100,7 +100,8 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		//printk("File size :%d\n", file_size);
 		while(file_size > 0 )
 		{			
-			read_file_bytes = read_file(input_file, input_file_buff,  PAGE_SIZE);
+			read_file_bytes = read_file(input_file, input_file_buff,  PAGE_SIZE-1);
+			input_file_buff[read_file_bytes]='\0';
 			if(strstr(input_file_buff, hex_in_char_ptr)!= NULL)
 			{
 				//printk("BLAckList.c : Virus found\n");

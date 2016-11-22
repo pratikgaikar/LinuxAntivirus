@@ -160,11 +160,14 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	copy_from_user(buffer, path, 4096);
 
 	if(strstr(buffer,".virus")!=NULL) {
-		printk("Cannot open this file: %s. It contains malicious content\n", buffer);
-		return -EBADF;
+		send_to_user(buffer);
+		//printk("Cannot open this file: %s. It contains malicious content\n", buffer);
+		goto out;
 	}
 	if(flags > 32768) {
 		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
+		if(buffer)
+			kfree(buffer);	
 		return original_open(path, flags, mode);
 	}
 	
@@ -183,6 +186,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	{
 		send_to_user(buffer); // send using socket
 	}
+	out:
 	if(buffer)
 		kfree(buffer);
 	return -EBADF;	
@@ -196,22 +200,21 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	copy_from_user(buffer, path, 4096);
 	
 	if(strstr(buffer,".virus")!=NULL) {
-		printk("Cannot open this file: %s. It contains malicious content\n", buffer);
-		return -EBADF;
+		send_to_user(buffer);
+		goto out;
 	}
-
 	ret = start_scan(buffer,O_RDONLY,0);
 	if(ret == 0)
 	{
 		if(buffer)
 			kfree(buffer);
-		//printk("Return to original exe\n");
 		return original_execve(path, argv, envp);
 	}	
 	else if(ret == -10)
 	{
 		send_to_user(buffer); // send using socket
 	}
+	out:
 	if(buffer)
 		kfree(buffer);
 	return -EBADF;
