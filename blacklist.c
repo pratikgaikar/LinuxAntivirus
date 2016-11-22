@@ -26,12 +26,12 @@ void convert(const char *s,char *char_in_hex, int *length)
 }
 
 
-bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
+bool check_in_blacklist(struct file * input_file,struct file * blacklist_file, char *virus_name)
 {
 	int read_blacklist_bytes = 0,read_file_bytes = 0, blacklist_size = 0, file_size= 0, original_file_size=0;
 	bool virus_flag = false;
 	int blacklist_fp = 0, hex_in_char_len=0;
-	char *black_list_work_buff = NULL, *black_list_init_buff = NULL, *virus_name = NULL , *parse_virus= NULL, *input_file_buff= NULL;
+	char *black_list_work_buff = NULL, *black_list_init_buff = NULL, *parse_virus= NULL, *input_file_buff= NULL;
 	char *hex_in_char_ptr=NULL;
 	
 	input_file_buff = kmalloc(PAGE_SIZE,GFP_KERNEL);
@@ -75,8 +75,9 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		}
 		if(parse_virus !=NULL)		
 		{
-			//printk("Inside parse_virus not null\n");			
-			virus_name = strsep(&parse_virus,",");
+			//printk("Inside parse_virus not null\n");
+			strcpy(virus_name, strsep(&parse_virus,","));			
+					
 		}
 		else
 		{
@@ -105,6 +106,7 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 			if(strstr(input_file_buff, hex_in_char_ptr)!= NULL)
 			{
 				//printk("BLAckList.c : Virus found\n");
+				//printk("\nVirus Name %s", virus_name);
 				virus_flag = true;				
 				goto out;				
 			}

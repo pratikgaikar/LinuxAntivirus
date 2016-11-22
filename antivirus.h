@@ -31,7 +31,7 @@ bool check_in_whitelist(struct file * input_file,struct file * white_list);
 /*
  *function prototype for blacklist operations.
  */
-bool check_in_blacklist(struct file * input_file,struct file * black_list);
+bool check_in_blacklist(struct file * input_file,struct file * black_list, char *virus_name);
 
 /*
  *function prototype for file operations
