@@ -10,9 +10,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-
+#include <error.h>
 extern int process(const char *file, const struct stat *sb,
 		   int flag, struct FTW *s);
+int total_files=0;
+int virus_files=0;
 
 int main(int argc, char **argv)
 {
@@ -46,7 +48,8 @@ int main(int argc, char **argv)
 		if(filePath!=NULL)		
 			free(filePath);
 	}
-
+	printf("Total Files Scanned=%d\n",total_files);
+	printf("Virus found in %d files\n",virus_files);
 	if ((flags & FTW_CHDIR) != 0) {
 		getcwd(finish, sizeof finish);
 		printf("Starting dir: %s\n", start);
@@ -69,7 +72,8 @@ int process(const char *file, const struct stat *sb,
 		realpath(file, buf);
 		file=buf;	
 	case FTW_F:
-		printf("scanning file %s\n", file);		
+		printf("scanning file %s\n", file);
+		total_files+=1;		
 		if(strstr(file, ".virus")!=NULL) {	
 			//printf("File %s is a virus file\n", file);
 			strcpy(command,"notify-send ");
@@ -87,9 +91,11 @@ int process(const char *file, const struct stat *sb,
 				printf("No virus found\n");
 				close(retval);
 			}
-			else
-			{
+			else if(retval==-1&& errno==9)
+			{	
+				virus_files+=1;
 				printf("Virus found\n");
+				
 			}
 			retval=0;
 
