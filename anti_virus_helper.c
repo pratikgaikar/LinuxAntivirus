@@ -58,7 +58,7 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 		ret = -10;  /*set file as a virus file*/
 		strcat(filename," ");
 		memcpy(filename + strlen(filename),virus_name,strlen(virus_name));
-		/*virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
+		virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
 		strcpy(virus_file_name,filename);
 		strcat(virus_file_name,".virus");
 		virus_file_name[strlen(virus_file_name)]='\0';
@@ -69,7 +69,7 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 			goto out;
    		}
 		//rename the file.
-		rename_file(input_file,virus_file);*/
+		rename_file(input_file,virus_file);
 			
 		goto out;
 	}

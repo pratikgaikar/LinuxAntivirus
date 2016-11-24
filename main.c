@@ -14,9 +14,7 @@ static struct sock *nl_sk = NULL;
 unsigned long *syscall_table = NULL; 
 asmlinkage long (*original_open) (const char __user *, int, umode_t);
 asmlinkage long (*original_execve) (const char __user *, const char __user *, const char __user *);
-
 asmlinkage long (*original_execveat) (int, const char __user *, const char __user *, const char __user *, int);
-asmlinkage long (*original_open_by_handle_at) (int, struct file_handle __user *, int);
 asmlinkage long (*original_openat) (int, const char __user *, int, umode_t);
 
 /* send virus file name to user*/
@@ -237,7 +235,7 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 		goto out;
 	}
 
-	printk("Openat hooked for file: %s\n", buffer);
+	//printk("Openat hooked for file: %s\n", buffer);
 	if(flags > 32768) {
 		if(buffer)
 			kfree(buffer);
@@ -274,7 +272,7 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	buffer[0] = '\0';	
 	copy_from_user(buffer, filename, 4096);
 	
-	printk("Execveat hooked for file %s\n", buffer);
+	//printk("Execveat hooked for file %s\n", buffer);
 	if(strstr(buffer,".virus")!=NULL) {
 		send_to_user(buffer);
 		//printk("Cannot open this file: %s. It contains malicious content\n", buffer);
@@ -300,10 +298,6 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	
 }
 
-asmlinkage long new_open_by_handle_at(int mountdirfd, struct file_handle __user *handle, int flags) {
-	printk("New Open By Handle At hooked\n");
-	return original_open_by_handle_at(mountdirfd, handle, flags);
-}
 
 
 static int __init antivirus_init(void)
@@ -325,13 +319,11 @@ static int __init antivirus_init(void)
 			original_open = (void *)syscall_table[__NR_open];
 			original_execve = (void *)syscall_table[__NR_execve];
 			original_execveat = (void *)syscall_table[__NR_execveat];
-			original_open_by_handle_at = (void *)syscall_table[__NR_open_by_handle_at];
 			original_openat = (void *)syscall_table[__NR_openat];
 
 			syscall_table[__NR_execve] = (unsigned long) &new_execve;
 			syscall_table[__NR_open] = (unsigned long) &new_open;
 			syscall_table[__NR_execveat] = (unsigned long) &new_execveat;
-			syscall_table[__NR_open_by_handle_at] = (unsigned long) &new_open_by_handle_at;
 			syscall_table[__NR_openat] = (unsigned long) &new_openat;
 			write_cr0(read_cr0() | 0x10000);
 			//printk("sys_call_table hooked successfully\n");
@@ -360,7 +352,6 @@ static void __exit antivirus_exit(void)
 		syscall_table[__NR_open] = (unsigned long)original_open;
 		syscall_table[__NR_execve] = (unsigned long)original_execve;
 		syscall_table[__NR_execveat] = (unsigned long) original_execveat;
-		syscall_table[__NR_open_by_handle_at] = (unsigned long) original_open_by_handle_at;
 		syscall_table[__NR_openat] = (unsigned long) original_openat;
 		write_cr0(read_cr0() | 0x10000);
 
