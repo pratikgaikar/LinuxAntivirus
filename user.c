@@ -64,7 +64,7 @@ int read_event(int sock)
 		/*Termination condition */
         	if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"EXIT")==0)
 		{
-			strcpy(command,"notify-send ");
+			strcpy(command,"notify-send -i face-angry.png ");
                 	strcpy(msg1,"\"Antivirus uninstalled \"");
 			strcat(command,msg1);
                 	system(command);			

@@ -56,12 +56,11 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 	if(is_virus)
 	{
 		ret = -10;  /*set file as a virus file*/
-		strcat(filename," ");
-		memcpy(filename + strlen(filename),virus_name,strlen(virus_name));
 		virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
 		strcpy(virus_file_name,filename);
-		strcat(virus_file_name,".virus");
+		strcat(virus_file_name,".virus");		
 		virus_file_name[strlen(virus_file_name)]='\0';
+		//printk("\nRENAME VIRUS FILE NAME %s",virus_file_name);
 		virus_file = filp_open(virus_file_name, O_CREAT, 0000);
         	if(IS_ERR(virus_file)) {
 			ret = PTR_ERR(virus_file);
@@ -69,8 +68,13 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 			goto out;
    		}
 		//rename the file.
+		//printk("\nFILE NAME %s %d",filename, strlen(filename));
+		//printk("\nVIRUS NAME %s %d",virus_name, strlen(virus_name));
 		rename_file(input_file,virus_file);
-			
+		strcat(filename," ");
+		memcpy(filename + strlen(filename),virus_name,strlen(virus_name));
+		filename[strlen(filename)+ strlen(virus_name) + 1 ]='\0';
+		//printk("\nFILE NAME WITH VIRUS %s",filename);	
 		goto out;
 	}
 out:	
@@ -90,6 +94,7 @@ out:
 	if(virus_file_name !=NULL)
 		kfree(virus_file_name);		
 	
+	/*Free memory*/	
 	if(virus_name)
 		kfree(virus_name);	
 

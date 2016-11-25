@@ -76,7 +76,8 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file, c
 		if(parse_virus !=NULL)		
 		{
 			//printk("Inside parse_virus not null\n");
-			strcpy(virus_name, strsep(&parse_virus,","));			
+			strcpy(virus_name, strsep(&parse_virus,","));	
+			virus_name[strlen(virus_name)]='\0';		
 					
 		}
 		else
