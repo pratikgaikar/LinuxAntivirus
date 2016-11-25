@@ -1,0 +1,30 @@
+#!/bin/bash
+
+dir=`uname -r`
+pwd=`echo linux-headers-${dir}`
+
+. /usr/src/${pwd}/LinuxAntivirus/scripts/antivirus.config
+
+function update
+{
+cd $path
+#echo $blacklist
+#echo $whitelist
+curl -L $blacklist > blacklist   #blacklist
+curl -L $whitelist > whitelist #whitelist
+
+blacklist_sha1=`sha1sum ${path}blacklist`
+whitelist_sha1=`sha1sum ${path}whitelist`
+IFS=' ' read -ra blacklist_sha1Arr <<< "$blacklist_sha1"
+IFS=' ' read -ra whitelist_sha1Arr <<< "$whitelist_sha1"
+#echo ${blacklist_sha1Arr[0]}
+#echo ${whitelist_sha1Arr[0]}
+echo "">>$path/whitelist
+echo ${blacklist_sha1Arr[0]} >> $path/whitelist
+echo ${whitelist_sha1Arr[0]} >> $path/whitelist
+
+}
+
+update
+
+

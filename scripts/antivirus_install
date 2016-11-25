@@ -1,0 +1,37 @@
+#!/bin/bash
+dir=`uname -r`
+pwd=`echo linux-headers-${dir}`
+function update_whitelist
+{
+	blacklist_sha1=`sha1sum /etc/antivirusfiles/blacklist`
+	whitelist_sha1=`sha1sum /etc/antivirusfiles/whitelist`
+	IFS=' ' read -ra blacklist_sha1Arr <<< "$blacklist_sha1"
+	IFS=' ' read -ra whitelist_sha1Arr <<< "$whitelist_sha1"
+	echo "">>$path/whitelist
+	echo ${blacklist_sha1Arr[0]} >> /etc/antivirusfiles/whitelist
+	echo ${whitelist_sha1Arr[0]} >> /etc/antivirusfiles/whitelist
+
+
+}
+function build_files
+{
+	gcc /usr/src/${pwd}/LinuxAntivirus/antivirus_check.c -o /usr/bin/antivirus_scan
+	gcc /usr/src/${pwd}/LinuxAntivirus/user.c -o /usr/bin/user
+
+}
+
+function copy_and_run_files
+{
+	mkdir -p /etc/antivirusfiles/
+	cp -r /usr/src/${pwd}/LinuxAntivirus/scripts/antivirus_update /usr/bin/
+	cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/blacklist /etc/antivirusfiles/
+	cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/whitelist /etc/antivirusfiles/
+	chmod -R 755 /usr/bin/antivirus_update /usr/bin/antivirus_scan
+	update_whitelist
+	nohup sh /usr/src/${pwd}/LinuxAntivirus/scripts/run_user.sh &
+	cd /usr/src/${pwd}/LinuxAntivirus
+	sh install.sh
+}
+
+build_files
+copy_and_run_files
