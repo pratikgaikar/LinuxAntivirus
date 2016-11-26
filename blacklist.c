@@ -71,6 +71,7 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		}
 		else
 		{
+			goto out;
 			//printk("Inside black_list_work_buff null\n");
 		}
 		if(parse_virus !=NULL)		
@@ -83,6 +84,8 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		else
 		{
 			//printk("Inside parse_virus null\n");
+			goto out;
+			
 		}
 		
 		if(parse_virus !=NULL)    
@@ -94,6 +97,7 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 		else
 		{
 			//printk("parse_virus is null");
+			goto out;
 		}
 
 		file_size=original_file_size;

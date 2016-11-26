@@ -160,8 +160,8 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	
-	if(flags > 32768) {
+	//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
+	if(flags > 32768 || strstr(buffer,"/proc") != NULL || strstr(buffer,"/usr/share") != NULL) {
 		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
 		if(buffer)
 			kfree(buffer);	
@@ -179,7 +179,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	{
 		send_to_user(buffer); // send using socket
 	}
-	out:
+	
 	if(buffer)
 		kfree(buffer);
 	return -EBADF;	
@@ -191,7 +191,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	
+	//printk("EXECVE hooked for file %s with flags: %d and mode: %d\n", buffer);
 	ret = start_scan(buffer,O_RDONLY,0);
 	if(ret == 0)
 	{
@@ -203,7 +203,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	{
 		send_to_user(buffer); // send using socket
 	}
-	out:
+	
 	if(buffer)
 		kfree(buffer);
 	return -EBADF;
@@ -217,7 +217,7 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 	copy_from_user(buffer, filename, 4096);
 
 	//printk("Openat hooked for file: %s\n", buffer);
-	if(flags > 32768) {
+	if(flags > 32768 || strstr(buffer,"/proc") || strstr(buffer,"/usr/share") != NULL) {
 		if(buffer)
 			kfree(buffer);
 		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
@@ -239,7 +239,7 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 	{
 		send_to_user(buffer); // send using socket
 	}
-	out:
+	
 	if(buffer)
 		kfree(buffer);
 	return -EBADF;	
@@ -258,7 +258,7 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	{
 		if(buffer)
 			kfree(buffer);
-		//printk("Return to original exe\n");
+		
 		return original_execveat(dfd, filename, argv, envp, flags);
 	}	
 	else if(ret == -10)
@@ -268,8 +268,7 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	out:
 	if(buffer)
 		kfree(buffer);
-	return -EBADF;	
-	
+	return -EBADF;		
 }
 
 
@@ -294,7 +293,6 @@ static int __init antivirus_init(void)
 			original_execve = (void *)syscall_table[__NR_execve];
 			original_execveat = (void *)syscall_table[__NR_execveat];
 			original_openat = (void *)syscall_table[__NR_openat];
-
 			syscall_table[__NR_execve] = (unsigned long) &new_execve;
 			syscall_table[__NR_open] = (unsigned long) &new_open;
 			syscall_table[__NR_execveat] = (unsigned long) &new_execveat;
