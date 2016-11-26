@@ -26,13 +26,13 @@ void convert(const char *s,char *char_in_hex, int *length)
 }
 
 
-bool check_in_blacklist(struct file * input_file,struct file * blacklist_file, char *virus_name)
+bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 {
 	int read_blacklist_bytes = 0,read_file_bytes = 0, blacklist_size = 0, file_size= 0, original_file_size=0;
 	bool virus_flag = false;
 	int blacklist_fp = 0, hex_in_char_len=0;
 	char *black_list_work_buff = NULL, *black_list_init_buff = NULL, *parse_virus= NULL, *input_file_buff= NULL;
-	char *hex_in_char_ptr=NULL;
+	char *hex_in_char_ptr=NULL, *virus_name=NULL;
 	
 	input_file_buff = kmalloc(PAGE_SIZE,GFP_KERNEL);
 	if(input_file_buff == NULL)
@@ -76,8 +76,8 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file, c
 		if(parse_virus !=NULL)		
 		{
 			//printk("Inside parse_virus not null\n");
-			strcpy(virus_name, strsep(&parse_virus,","));	
-			virus_name[strlen(virus_name)]='\0';		
+			virus_name = strsep(&parse_virus,",");	
+			//virus_name[strlen(virus_name)]='\0';		
 					
 		}
 		else

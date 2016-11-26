@@ -4,12 +4,10 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 	int ret = 0;
 	struct file *black_list= NULL, *input_file = NULL, *white_list = NULL, *virus_file = NULL;
 	bool in_whitelist=false ,is_virus=false;
-	char *virus_file_name = NULL, *virus_name = NULL;
+	char *virus_file_name = NULL;
 	struct inode *inode;
 	umode_t im;
 	
-	virus_name = kmalloc(PAGE_SIZE,GFP_KERNEL);
-
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         if(IS_ERR(black_list)) {
 		printk("\nError in black list file open");
@@ -43,6 +41,13 @@ int check_for_virus(char *filename, int flags, umode_t mode)
             		goto out;
         	}
     	}
+
+	if(strstr(filename,".virus")!=NULL) {
+		ret = -10;
+		//printk("Cannot open this file: %s. It contains malicious content\n", buffer);
+		goto out;
+	}
+
 	
 	/* Check for whitelist*/
 	in_whitelist=check_in_whitelist(input_file,white_list);
@@ -52,7 +57,7 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 		goto out;
 	}
 	/* Check for virus content */
-	is_virus=check_in_blacklist(input_file,black_list, virus_name);
+	is_virus=check_in_blacklist(input_file,black_list);
 	if(is_virus)
 	{
 		ret = -10;  /*set file as a virus file*/
@@ -60,7 +65,7 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 		strcpy(virus_file_name,filename);
 		strcat(virus_file_name,".virus");		
 		virus_file_name[strlen(virus_file_name)]='\0';
-		//printk("\nRENAME VIRUS FILE NAME %s",virus_file_name);
+		printk("\nRENAME VIRUS FILE NAME %s",virus_file_name);
 		virus_file = filp_open(virus_file_name, O_CREAT, 0000);
         	if(IS_ERR(virus_file)) {
 			ret = PTR_ERR(virus_file);
@@ -71,10 +76,6 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 		//printk("\nFILE NAME %s %d",filename, strlen(filename));
 		//printk("\nVIRUS NAME %s %d",virus_name, strlen(virus_name));
 		rename_file(input_file,virus_file);
-		strcat(filename," ");
-		memcpy(filename + strlen(filename),virus_name,strlen(virus_name));
-		filename[strlen(filename)+ strlen(virus_name) + 1 ]='\0';
-		//printk("\nFILE NAME WITH VIRUS %s",filename);	
 		goto out;
 	}
 out:	
@@ -92,11 +93,7 @@ out:
 
 	/*Free memory*/	
 	if(virus_file_name !=NULL)
-		kfree(virus_file_name);		
+		kfree(virus_file_name);
 	
-	/*Free memory*/	
-	if(virus_name)
-		kfree(virus_name);	
-
 	return ret;
 }

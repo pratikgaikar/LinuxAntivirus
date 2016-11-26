@@ -160,12 +160,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-
-	if(strstr(buffer,".virus")!=NULL) {
-		send_to_user(buffer);
-		//printk("Cannot open this file: %s. It contains malicious content\n", buffer);
-		goto out;
-	}
+	
 	if(flags > 32768) {
 		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
 		if(buffer)
@@ -173,10 +168,6 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 		return original_open(path, flags, mode);
 	}
 	
-	/*if(strstr(buffer,"testfile1")!=NULL) {
-		ret = start_scan(buffer,flags,mode);
-	}*/
-
 	ret = start_scan(buffer,flags,mode);
 	if(ret == 0)
 	{
@@ -201,10 +192,6 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
 	
-	if(strstr(buffer,".virus")!=NULL) {
-		send_to_user(buffer);
-		goto out;
-	}
 	ret = start_scan(buffer,O_RDONLY,0);
 	if(ret == 0)
 	{
@@ -228,12 +215,6 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, filename, 4096);
-
-	if(strstr(buffer,".virus")!=NULL) {
-		send_to_user(buffer);
-		//printk("Cannot open this file: %s. It contains malicious content\n", buffer);
-		goto out;
-	}
 
 	//printk("Openat hooked for file: %s\n", buffer);
 	if(flags > 32768) {
@@ -272,13 +253,6 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	buffer[0] = '\0';	
 	copy_from_user(buffer, filename, 4096);
 	
-	//printk("Execveat hooked for file %s\n", buffer);
-	if(strstr(buffer,".virus")!=NULL) {
-		send_to_user(buffer);
-		//printk("Cannot open this file: %s. It contains malicious content\n", buffer);
-		goto out;
-	}
-
 	ret = start_scan(buffer,O_RDONLY,0);
 	if(ret == 0)
 	{
