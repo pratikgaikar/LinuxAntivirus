@@ -1,5 +1,8 @@
 #include"antivirus.h"
 
+/*
+* Find the last occurence of \0 or \n and return the offset of buffer
+*/
 int remove_garbage_value(char *data, int recordsize)
 {
 	int i= recordsize-1;
@@ -17,6 +20,10 @@ int remove_garbage_value(char *data, int recordsize)
         return strlen(data);
 }
 
+
+/*
+* read the data of the file in the buffer
+*/
 int read_file(struct file* file, char *data, int size) {
         int ret;
         mm_segment_t oldfs;
@@ -27,6 +34,9 @@ int read_file(struct file* file, char *data, int size) {
         return ret;
 }
 
+/*
+* Rename the existing file as .virus file
+*/
 int rename_file(struct file *temp_file, struct file *output_file)
 {
 	int ret =0;   

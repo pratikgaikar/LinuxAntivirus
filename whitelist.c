@@ -75,6 +75,9 @@ out:
 	return rc;
 }
 
+/*
+* Check whether the sha1sum of the file is present in the  whitelist
+*/
 bool check_in_whitelist(struct file * input_file,struct file * white_list)
 {
 	bool in_whitelist=false;

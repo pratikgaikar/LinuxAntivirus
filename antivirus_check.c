@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 		printf("Usage:Pass a directory or filename to be scanned\n");
 	 }
 	getcwd(start, sizeof start);
-	nfds = getdtablesize() -5;
+	nfds = getdtablesize() -5;	
 	for (i = optind; i < argc; i++) {
 		char * filePath=malloc(4096);
 		filePath[0]='\0';
@@ -41,6 +41,7 @@ int main(int argc, char **argv)
 		   strcat(filePath,argv[i]);
 		}
 		printf("FilePath=%s\n",filePath);
+		//iterate over a particular directory provided
 		if (nftw(argv[i], process, nfds, flags) != 0) {
 			fprintf(stderr, "%s: %s: Not a valid filename/directory\n",
 				argv[0], argv[i]);
@@ -49,7 +50,10 @@ int main(int argc, char **argv)
 			free(filePath);
 	}
 	printf("Total Files Scanned=%d\n",total_files);
-	printf("Virus found in %d files\n",virus_files);
+	if(virus_files!=0)
+		printf("Virus found in %d files\n",virus_files);
+	else
+		printf("No virus files found\n");
 	if ((flags & FTW_CHDIR) != 0) {
 		getcwd(finish, sizeof finish);
 		printf("Starting dir: %s\n", start);
@@ -59,7 +63,9 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-
+/*
+  processing the files according to the types.
+*/
 int process(const char *file, const struct stat *sb,
 	    int flag, struct FTW *s)
 {
@@ -74,12 +80,13 @@ int process(const char *file, const struct stat *sb,
 	case FTW_F:
 		printf("scanning file %s\n", file);
 		total_files+=1;		
-		if(strstr(file, ".virus")!=NULL) {	
+		if(strstr(file, ".virus")!=NULL) {
+			virus_files+=1;	
 			//printf("File %s is a virus file\n", file);
-			strcpy(command,"notify-send ");
-                	strcpy(msg1,"\"VIRUS file found: \"");
+			strcpy(command,"notify-send -i error ");
+                	strcpy(msg1,"\" VIRUS file found: \"");
                 	strcat(msg1,file);
-			strcat(msg1,"\"  cannot open \"");
+			strcat(msg1,"\" cannot open \"");
                 	strcat(command,msg1);
                 	system(command);
 			

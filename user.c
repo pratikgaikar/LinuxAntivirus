@@ -9,6 +9,9 @@
 #define GRP 21
 #define MAX_PAYLOAD 1024
 
+/*
+* Open a socket Connection with the kernel	
+*/
 int open_netlink(void)
 {
     	int sock, group, ret;
@@ -42,6 +45,9 @@ int open_netlink(void)
 	return sock;
 }
 
+/*
+* Read the events recieved from the kernel
+*/
 int read_event(int sock)
 {    
 	struct sockaddr_nl address;
@@ -64,16 +70,16 @@ int read_event(int sock)
 		/*Termination condition */
         	if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"EXIT")==0)
 		{
-			strcpy(command,"notify-send -i face-angry.png ");
-                	strcpy(msg1,"\"Antivirus uninstalled \"");
+			strcpy(command,"notify-send -i error \"");
+                	strcpy(msg1," Antivirus uninstalled \"");
 			strcat(command,msg1);
                 	system(command);			
 			exit(0);
 		}
 		else
 		{
-			strcpy(command,"notify-send ");
-                	strcpy(msg1,"\"VIRUS FOUND  \"");
+			strcpy(command,"notify-send -i error \"");
+                	strcpy(msg1," VIRUS FOUND \"");
                 	strcat(msg1,NLMSG_DATA((struct nlmsghdr *) &buffer));
 			strcat(command,msg1);
                 	system(command);
