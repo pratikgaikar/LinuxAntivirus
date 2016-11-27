@@ -40,21 +40,25 @@ int main(int argc, char **argv)
 		{
 		   strcat(filePath,argv[i]);
 		}
-		printf("FilePath=%s\n",filePath);
 		//iterate over a particular directory provided
+		printf("------------------------------------------------------------------\n");
+		printf("			SCANNING Started  			  \n");
+		printf("------------------------------------------------------------------\n");
 		if (nftw(argv[i], process, nfds, flags) != 0) {
 			//Invalid directory/filename		
-			fprintf(stderr, "%s: %s: Not a valid filename/directory\n",
-				argv[0], argv[i]);
+				fprintf(stderr, "%s: %s: \t\t Not a valid filename/directory\n",argv[0], argv[i]);
 			}
 		if(filePath!=NULL)		
 			free(filePath);
 	}
-	printf("Total Files Scanned=%d\n",total_files);
+	printf("------------------------------------------------------------------\n");
+	printf("			SCAN SUMMARY  				   \n ");
+	printf("------------------------------------------------------------------\n");
+	printf("\t\tTotal Files Scanned=%d\n",total_files);
 	if(virus_files!=0)
-		printf("Virus found in %d files\n",virus_files);
+		printf("\t\tVirus found in %d files\n",virus_files);
 	else
-		printf("No virus files found\n");
+		printf("\t\tNo virus files found\n");
 	if ((flags & FTW_CHDIR) != 0) {
 		getcwd(finish, sizeof finish);
 		printf("Starting dir: %s\n", start);
@@ -79,11 +83,11 @@ int process(const char *file, const struct stat *sb,
 		realpath(file, buf);
 		file=buf;	
 	case FTW_F:
-		printf("scanning file %s\n", file);
+		printf("\t\tScanning file %s\n", file);
 		total_files+=1;		
 		if(strstr(file, ".virus")!=NULL) {
 			virus_files+=1;	
-			//printf("File %s is a virus file\n", file);
+			printf("\t\tResult:Virus File\n\n");
 			strcpy(command,"notify-send -i error ");
                 	strcpy(msg1,"\" VIRUS file found: \"");
                 	strcat(msg1,file);
@@ -96,13 +100,13 @@ int process(const char *file, const struct stat *sb,
 			//printf("Return value: %d \t errno : %d\n", retval,errno);
 			if(retval>-1)
 			{	
-				printf("No virus found\n");
+				printf("\t\tResult:Clean File\n\n");
 				close(retval);
 			}
 			else if(retval==-1&& errno==9)
 			{	
 				virus_files+=1;
-				printf("Virus found\n");
+				printf("\t\tResult:Virus found\n\n");
 				
 			}
 			retval=0;

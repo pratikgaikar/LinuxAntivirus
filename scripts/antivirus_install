@@ -28,6 +28,7 @@ function copy_and_run_files
 	cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/whitelist /etc/antivirusfiles/
 	chmod -R 755 /usr/bin/antivirus_update /usr/bin/antivirus_scan
 	update_whitelist
+	rm -rf /usr/src/${pwd}/LinuxAntivirus/scripts/nohup.out
 	nohup sh /usr/src/${pwd}/LinuxAntivirus/scripts/run_user.sh &
 	cd /usr/src/${pwd}/LinuxAntivirus
 	sh install.sh

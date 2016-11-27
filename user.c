@@ -66,10 +66,12 @@ int read_event(int sock)
     	if (ret < 0)
         	printf("ret < 0.\n");
     	else
-	{
+	{	
+		
 		/*Termination condition */
         	if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"EXIT")==0)
-		{
+		{	
+			printf("Message Recieved:%s\n",NLMSG_DATA((struct nlmsghdr *) &buffer));
 			strcpy(command,"notify-send -i error \"");
                 	strcpy(msg1," Antivirus uninstalled \"");
 			strcat(command,msg1);
@@ -77,7 +79,8 @@ int read_event(int sock)
 			exit(0);
 		}
 		else if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"INSTALLED_ANTIVIRUS")==0)
-		{
+		{	
+			printf("Message Recieved:%s\n",NLMSG_DATA((struct nlmsghdr *) &buffer));		
 			strcpy(command,"notify-send \"");
                 	strcpy(msg1," ANTIVIRUS INSTALLED \"");
 			strcat(command,msg1);
@@ -85,7 +88,7 @@ int read_event(int sock)
 			
 		}
 		else
-		{
+		{	
 			strcpy(command,"notify-send -i error \"");
                 	strcpy(msg1," VIRUS FOUND \"");
                 	strcat(msg1,NLMSG_DATA((struct nlmsghdr *) &buffer));
@@ -101,6 +104,7 @@ int main(int argc, char *argv[])
     	sock = open_netlink();
        	if (sock < 0)
         	return sock;
+	printf("Listening:\n");
 	while (1)
     	{
 		read_event(sock);
