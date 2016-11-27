@@ -11,10 +11,75 @@
 #include <string.h>
 #include <fcntl.h>
 #include <error.h>
-extern int process(const char *file, const struct stat *sb,
-		   int flag, struct FTW *s);
+
 int total_files=0;
 int virus_files=0;
+
+/*
+  processing the files according to the types.
+*/
+int process_files(const char *file, const struct stat *sb,
+	    int flag, struct FTW *s)
+{
+	int retval = 0,rc=0;
+	char *buf=NULL;
+	char command[4200], msg1[4200];
+	switch (flag) {
+	case FTW_SL:
+		buf=malloc(4096);		
+		realpath(file, buf);
+		file=buf;	
+	case FTW_F:
+		printf("\t\tScanning file %s\n", file);
+		total_files+=1;		
+		if(strstr(file, ".virus")!=NULL) {
+			virus_files+=1;	
+			printf("\t\tResult:Virus File\n\n");
+			strcpy(command,"notify-send -i error ");
+                	strcpy(msg1,"\" VIRUS file found: \"");
+                	strcat(msg1,file);
+			strcat(msg1,"\" cannot open \"");
+                	strcat(command,msg1);
+                	system(command);
+			
+		} else {
+			retval= open(file,O_RDONLY);
+			if(retval>-1)
+			{	
+				printf("\t\tResult:Clean File\n\n");
+				close(retval);
+			}
+			else if(retval==-1&& errno==9)
+			{	
+				virus_files+=1;
+				printf("\t\tResult:Virus found\n\n");
+				
+			}
+			retval=0;
+
+		}
+		if(buf!=NULL)
+		  free(buf);
+		break;
+	case FTW_SLN:
+		printf("\t\tSymbolic link %s pointing to a nonexistent file\n",file);
+		break;	
+	case FTW_DNR:
+		printf("\t\tUnreadable Directory: %s\n",file);
+		break;
+	case FTW_NS:
+		printf("\t\tStat failed to path: %s\n",file);
+		break;
+	case FTW_D :		
+	case FTW_DP:
+		break;
+	default:
+		retval = 1;
+		break;
+	}
+	
+	return retval;
+}
 
 int main(int argc, char **argv)
 {
@@ -44,7 +109,7 @@ int main(int argc, char **argv)
 		printf("------------------------------------------------------------------\n");
 		printf("			SCANNING Started  			  \n");
 		printf("------------------------------------------------------------------\n");
-		if (nftw(argv[i], process, nfds, flags) != 0) {
+		if (nftw(argv[i], process_files, nfds, flags) != 0) {
 			//Invalid directory/filename		
 				fprintf(stderr, "%s: %s: \t\t Not a valid filename/directory\n",argv[0], argv[i]);
 			}
@@ -68,73 +133,4 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-/*
-  processing the files according to the types.
-*/
-int process(const char *file, const struct stat *sb,
-	    int flag, struct FTW *s)
-{
-	int retval = 0,rc=0;
-	char *buf=NULL;
-	char command[4200], msg1[4200];
-	switch (flag) {
-	case FTW_SL:
-		buf=malloc(4096);		
-		realpath(file, buf);
-		file=buf;	
-	case FTW_F:
-		printf("\t\tScanning file %s\n", file);
-		total_files+=1;		
-		if(strstr(file, ".virus")!=NULL) {
-			virus_files+=1;	
-			printf("\t\tResult:Virus File\n\n");
-			strcpy(command,"notify-send -i error ");
-                	strcpy(msg1,"\" VIRUS file found: \"");
-                	strcat(msg1,file);
-			strcat(msg1,"\" cannot open \"");
-                	strcat(command,msg1);
-                	system(command);
-			
-		} else {
-			retval= open(file,O_RDONLY);
-			//printf("Return value: %d \t errno : %d\n", retval,errno);
-			if(retval>-1)
-			{	
-				printf("\t\tResult:Clean File\n\n");
-				close(retval);
-			}
-			else if(retval==-1&& errno==9)
-			{	
-				virus_files+=1;
-				printf("\t\tResult:Virus found\n\n");
-				
-			}
-			retval=0;
 
-		}
-		if(buf!=NULL)
-		  free(buf);
-		break;
-	case FTW_D:		
-		//printf("%s (directory)\n", name);
-		break;
-	case FTW_DNR:
-		//printf("%s (unreadable directory)\n", name);
-		break;
-	case FTW_NS:
-		//printf("%s (stat failed): %s\n", name, strerror(errno));
-		break;
-	case FTW_DP:
-		break;
-	case FTW_SLN:
-		//printf("%s: FTW_DP or FTW_SLN: can't happen!\n", name);
-		retval = 1;
-		break;
-	default:
-		//printf("%s: unknown flag %d: can't happen!\n", name, flag);
-		retval = 1;
-		break;
-	}
-	
-	return retval;
-}
