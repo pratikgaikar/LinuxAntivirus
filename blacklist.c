@@ -1,8 +1,9 @@
 #include"antivirus.h"
 
 /*
- * Input:
- * Functionality: returns a hex value for given byte string seperated by white spaces
+ * Input: s: Pointer to a string which has hex bytes to be converted to char,
+ * endptr: end pointer of the string
+ * Functionality: returns a character for given bytes seperated by white spaces
  */
 unsigned char gethex(const char *s, char **endptr)
 {
@@ -11,10 +12,13 @@ unsigned char gethex(const char *s, char **endptr)
 	ch = strtoul(s, endptr, 16);
 	return ch;
 }
-
+/*
+ * Input: s: String with bytes, to be converted to characters, char_in_hex: Output is 
+ * written to this variable, length : length of the output.
+ * Functionality: returns a character string for given bytes of string seperated by white spaces
+ */
 void convert(const char *s,char *char_in_hex, int *length)
 {
-    //unsigned char *answer = kmalloc(((strlen(s) + 1) / 3) + 1, GFP_KERNEL);
     	unsigned char *answer = char_in_hex;
     	unsigned char *p;
 	for (p = answer; *s; p++)
@@ -22,10 +26,13 @@ void convert(const char *s,char *char_in_hex, int *length)
 		*p = gethex(s, (char **)&s);
 	}
 	*length = p - answer;
-	//return answer;
 }
 
-
+/*
+ * Input: input_file : The file which is to be scanned for virus,  blacklist_file: The
+ * file which has blacklist bytes
+ * Functionality: Checks for virus, returns true if it has virus and false otherwise.
+ */
 bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 {
 	int read_blacklist_bytes = 0,read_file_bytes = 0, blacklist_size = 0, file_size= 0, original_file_size=0;
@@ -37,7 +44,6 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 	input_file_buff = kmalloc(PAGE_SIZE,GFP_KERNEL);
 	if(input_file_buff == NULL)
 	{
-		//err = -ENOMEM;
 		goto out;
 	}
 	input_file_buff[0]='\0';
@@ -48,42 +54,33 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 
 	hex_in_char_ptr = kmalloc(PAGE_SIZE,GFP_KERNEL);
     	hex_in_char_ptr[0]='\0';
-	//printk("Entering in main while loop\n");
+
     	while(blacklist_size > 0 || (black_list_work_buff!=NULL && strlen(black_list_work_buff) > 0))
     	{        
-		//printk("blacklist size :%d\n", blacklist_size);
         	hex_in_char_ptr[0]='\0';        
         	if(black_list_work_buff == NULL || strlen(black_list_work_buff) == 0)
         	{
-			//printk("The black_list_work_buff is NULL or its length is 0\n");
 			black_list_work_buff = black_list_init_buff;
 			read_blacklist_bytes = read_file(blacklist_file, black_list_work_buff, PAGE_SIZE);
 			blacklist_fp += remove_garbage_value(black_list_work_buff, read_blacklist_bytes);
         		blacklist_file->f_pos = blacklist_fp;
-			//printk("black_list_work_buff length : %d\n", strlen(black_list_work_buff));
 			blacklist_size -= strlen(black_list_work_buff);
 		}
 
 		if(black_list_work_buff != NULL)
 		{
-			//printk("Inside black_list_work_buff not null\n");
 			parse_virus = strsep(&black_list_work_buff,"\n");
 		}
 		else
 		{
 			goto out;
-			//printk("Inside black_list_work_buff null\n");
 		}
 		if(parse_virus !=NULL)		
 		{
-			//printk("Inside parse_virus not null\n");
 			virus_name = strsep(&parse_virus,",");	
-			//virus_name[strlen(virus_name)]='\0';		
-					
 		}
 		else
 		{
-			//printk("Inside parse_virus null\n");
 			goto out;
 			
 		}
@@ -92,26 +89,20 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
         	{
             		convert(parse_virus,hex_in_char_ptr, &hex_in_char_len);
             		hex_in_char_ptr[hex_in_char_len]='\0';
-			//printk("\nHex value: %s\n", hex_in_char_ptr);
         	}
 		else
 		{
-			//printk("parse_virus is null");
 			goto out;
 		}
 
 		file_size=original_file_size;
 		input_file->f_pos=0;
-		//printk("Entering in second while loop\n");
-		//printk("File size :%d\n", file_size);
 		while(file_size > 0 )
 		{			
 			read_file_bytes = read_file(input_file, input_file_buff,  PAGE_SIZE-1);
 			input_file_buff[read_file_bytes]='\0';
 			if(strstr(input_file_buff, hex_in_char_ptr)!= NULL)
 			{
-				//printk("BLAckList.c : Virus found\n");
-				//printk("\nVirus Name %s", virus_name);
 				virus_flag = true;				
 				goto out;				
 			}
@@ -127,9 +118,6 @@ bool check_in_blacklist(struct file * input_file,struct file * blacklist_file)
 			}
 			input_file_buff[0]='\0';
 		}		
-		//printk("Exiting second while loop\n");
-		//printk("File size :%d\n", file_size);
-		//printk("blacklist size :%d\n", blacklist_size);
 	}
 
 	out:	
