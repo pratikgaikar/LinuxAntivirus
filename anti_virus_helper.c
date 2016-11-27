@@ -7,27 +7,35 @@ int check_for_virus(char *filename, int flags, umode_t mode)
 	char *virus_file_name = NULL;
 	struct inode *inode;
 	umode_t im;
-	//printk("\nFile open --------------> %s",filename);
+	
+	/*Open blacklist file*/
 	black_list = filp_open("/etc/antivirusfiles/blacklist", O_RDONLY, 0);
         if(IS_ERR(black_list)) {
-		printk("\t Error in black list file open  %s\n",filename);
 		black_list = NULL;		
 		goto out;
         }
 
+	/*Open whitelist file*/
 	white_list = filp_open("/etc/antivirusfiles/whitelist", O_RDONLY, 0);
         if(IS_ERR(white_list)) {
-                printk("\t Error in white list file open %s\n",filename);
-		white_list = NULL;
+               	white_list = NULL;
 		goto out;
         }
 
+	/*Open input file for scan*/
 	input_file = filp_open(filename, flags, mode);
         if(IS_ERR(input_file)) {
                 input_file = NULL;
 		goto out;
         }
 	
+	/* if .virus file just skip */
+	if(strstr(filename,".virus")!=NULL) {
+		ret = -10;
+		goto out;
+	}
+
+	/*check for regular file*/
 	inode = file_inode(input_file);
     	if(inode != NULL)
 	{    
@@ -41,45 +49,32 @@ int check_for_virus(char *filename, int flags, umode_t mode)
             		goto out;
         	}
     	}
-
-	if(strstr(filename,".virus")!=NULL) {
-		ret = -10;
-		//printk("Cannot open this file: %s. It contains malicious content\n", buffer);
-		goto out;
-	}
-
 	
 	/* Check for whitelist*/
 	in_whitelist=check_in_whitelist(input_file,white_list);
 	if(in_whitelist)
 	{
-		//printk("\t FOUND IN WHITELIST.\n");		
-		goto out;
+		goto out;   /*No need to check for blacklist*/
 	}
+	
 	/* Check for virus content */
-	//if(strstr(filename,"testfile2")!=NULL)
-	//{
-		is_virus=check_in_blacklist(input_file,black_list);
-	//}
+	is_virus=check_in_blacklist(input_file,black_list);
+	
 	if(is_virus)
 	{
 		ret = -10;  /*set file as a virus file*/
-		//printk("\t FOUND IN BLACKLIST.\n");		
-		//goto out;		
 		virus_file_name = kzalloc(PAGE_SIZE,GFP_KERNEL);
-		strcpy(virus_file_name,filename);
-		strcat(virus_file_name,".virus");		
-		virus_file_name[strlen(virus_file_name)]='\0';
-		//printk("\nRENAME VIRUS FILE NAME %s",virus_file_name);
-		virus_file = filp_open(virus_file_name, O_CREAT, 0000);
-        	if(IS_ERR(virus_file)) {
-			ret = PTR_ERR(virus_file);
-                	printk("\nError in virus rename list file open");
+		if(virus_file_name == NULL)
 			goto out;
+		strcpy(virus_file_name,filename);
+		strcat(virus_file_name,".virus");  /*append .virus to the file name*/		
+		virus_file_name[strlen(virus_file_name)]='\0';
+		virus_file = filp_open(virus_file_name, O_CREAT, 0000);   /*open .virus file with no permission */
+        	if(IS_ERR(virus_file)) {
+			virus_file = NULL;
+                	goto out;
    		}
 		//rename the file.
-		//printk("\nFILE NAME %s %d",filename, strlen(filename));
-		//printk("\nVIRUS NAME %s %d",virus_name, strlen(virus_name));
 		rename_file(input_file,virus_file);
 		goto out;
 	}

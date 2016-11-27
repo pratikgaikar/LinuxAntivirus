@@ -1,15 +1,5 @@
 #include"antivirus.h"
 
-#include <linux/netlink.h>
-#include <net/netlink.h>
-#include <net/net_namespace.h>
-
-#define PROC_V    "/proc/version"
-#define BOOT_PATH "/boot/System.map-"
-#define MAX_VERSION_LEN   256
-#define MYPROTO NETLINK_USERSOCK
-#define MYGRP 21
-
 static struct sock *nl_sk = NULL;
 unsigned long *syscall_table = NULL; 
 asmlinkage long (*original_open) (const char __user *, int, umode_t);
@@ -31,13 +21,10 @@ static void send_to_user(char *msg)
     }
     nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
     strcpy(nlmsg_data(nlh), msg);    
-    res = nlmsg_multicast(nl_sk, skb, 0, MYGRP, GFP_KERNEL);
-    /*if (res < 0)
-        pr_info("nlmsg_multicast(). error: %d\n", res);
-    else
-        pr_info("Success.\n");*/
+    res = nlmsg_multicast(nl_sk, skb, 0, MYGRP, GFP_KERNEL);   
 }
 
+/* Get current kernel version */
 char *acquire_kernel_version (char *buf) {
 	struct file *proc_version = NULL;
 	char *kernel_version = NULL;
@@ -160,9 +147,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
-	if(flags > 32768 || strstr(buffer,"/proc") != NULL || strstr(buffer,"/usr/share") != NULL) {
-		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
+	if(flags > 32768 || strstr(buffer,"/proc") != NULL) {
 		if(buffer)
 			kfree(buffer);	
 		return original_open(path, flags, mode);
@@ -191,7 +176,6 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	//printk("EXECVE hooked for file %s with flags: %d and mode: %d\n", buffer);
 	ret = start_scan(buffer,O_RDONLY,0);
 	if(ret == 0)
 	{
@@ -217,7 +201,7 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 	copy_from_user(buffer, filename, 4096);
 
 	//printk("Openat hooked for file: %s\n", buffer);
-	if(flags > 32768 || strstr(buffer,"/proc") || strstr(buffer,"/usr/share") != NULL) {
+	if(flags > 32768 || strstr(buffer,"/proc")) {
 		if(buffer)
 			kfree(buffer);
 		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
@@ -297,13 +281,8 @@ static int __init antivirus_init(void)
 			syscall_table[__NR_open] = (unsigned long) &new_open;
 			syscall_table[__NR_execveat] = (unsigned long) &new_execveat;
 			syscall_table[__NR_openat] = (unsigned long) &new_openat;
-			write_cr0(read_cr0() | 0x10000);
-			//printk("sys_call_table hooked successfully\n");
-		} 
-		else {
-			//printk("syscall_table is NULL\n");
-		}
-		
+			write_cr0(read_cr0() | 0x10000);			
+		} 		
 	}
 	
 	nl_sk = netlink_kernel_create(&init_net, MYPROTO, NULL);
@@ -328,15 +307,13 @@ static void __exit antivirus_exit(void)
 		syscall_table[__NR_execve] = (unsigned long)original_execve;
 		syscall_table[__NR_execveat] = (unsigned long) original_execveat;
 		syscall_table[__NR_openat] = (unsigned long) original_openat;
-		write_cr0(read_cr0() | 0x10000);
-
-		//printk("sys_call_table unhooked successfully\n");
+		write_cr0(read_cr0() | 0x10000);		
 	} 
 	else {
-		//printk("syscall_table is NULL\n");
+		printk("syscall_table is NULL\n");
 	}	
 	send_to_user("EXIT"); // send using socket
-	netlink_kernel_release(nl_sk);
+	netlink_kernel_release(nl_sk); //release socket.
 }
 
 MODULE_LICENSE("GPL");

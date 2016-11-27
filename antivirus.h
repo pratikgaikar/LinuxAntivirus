@@ -17,6 +17,15 @@
 #include <linux/acpi.h>
 #include <linux/ctype.h>
 #include <linux/dcache.h>
+#include <linux/netlink.h>
+#include <net/netlink.h>
+#include <net/net_namespace.h>
+
+#define PROC_V    "/proc/version"
+#define BOOT_PATH "/boot/System.map-"
+#define MAX_VERSION_LEN   256
+#define MYPROTO NETLINK_USERSOCK
+#define MYGRP 21
 
 /*
  *function prototype for linked list
