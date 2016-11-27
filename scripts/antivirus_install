@@ -22,14 +22,18 @@ function build_files
 
 function copy_and_run_files
 {
-	mkdir -p /etc/antivirusfiles/
-	mkdir -p /usr/src/${pwd}/LinuxAntivirus/testfiles2
-	cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/* /usr/src/${pwd}/LinuxAntivirus/testfiles2/
+	
 	cp -r /usr/src/${pwd}/LinuxAntivirus/scripts/antivirus_update /usr/bin/
-	cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/blacklist /etc/antivirusfiles/
-	cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/whitelist /etc/antivirusfiles/
+	if [[ -f /etc/antivirusfiles/blacklist && -f /etc/antivirusfiles/whitelist ]];then 
+		echo "Whitelist and blacklist file already exists in /etc/antivirusfiles " 
+	else
+		echo "Adding Blacklist and Whitelist files"
+		mkdir -p /etc/antivirusfiles/
+		cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/blacklist /etc/antivirusfiles/
+		cp -r /usr/src/${pwd}/LinuxAntivirus/testfiles/whitelist /etc/antivirusfiles/
+		update_whitelist
+	fi
 	chmod -R 755 /usr/bin/antivirus_update /usr/bin/antivirus_scan
-	update_whitelist
 	rm -rf /usr/src/${pwd}/LinuxAntivirus/scripts/nohup.out
 	nohup sh /usr/src/${pwd}/LinuxAntivirus/scripts/run_user.sh &
 	cd /usr/src/${pwd}/LinuxAntivirus
