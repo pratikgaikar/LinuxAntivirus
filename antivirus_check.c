@@ -43,6 +43,7 @@ int main(int argc, char **argv)
 		printf("FilePath=%s\n",filePath);
 		//iterate over a particular directory provided
 		if (nftw(argv[i], process, nfds, flags) != 0) {
+			//Invalid directory/filename		
 			fprintf(stderr, "%s: %s: Not a valid filename/directory\n",
 				argv[0], argv[i]);
 			}
