@@ -18,8 +18,7 @@ int virus_files=0;
 /*
   processing the files according to the types.
 */
-int process_files(const char *file, const struct stat *sb,
-	    int flag, struct FTW *s)
+int process_files(const char *file, const struct stat *stat_buf,int flag, struct FTW *ftw)
 {
 	int retval = 0,rc=0;
 	char *buf=NULL;
