@@ -25,95 +25,101 @@ static void send_to_user(char *msg)
 }
 
 /* Get current kernel version from /proc/version file*/
-char *acquire_kernel_version (char *buf) {
-	struct file *proc_version = NULL;
+char *get_kernel_version (char *buffer) {
+	struct file *proc_version_file = NULL;
 	char *kernel_version = NULL;
 	mm_segment_t oldfs;
 	oldfs = get_fs();
 	set_fs (KERNEL_DS);
 	
-	proc_version = filp_open(PROC_V, O_RDONLY, 0);
-	if (IS_ERR(proc_version) || (proc_version == NULL)) {
+	proc_version_file = filp_open(PROC_VERSION, O_RDONLY, 0);
+	if (proc_version_file == NULL || IS_ERR(proc_version_file)) {
 	    return NULL;
 	}
 
-	vfs_read(proc_version, buf, MAX_VERSION_LEN, &(proc_version->f_pos));
-	kernel_version = strsep(&buf, " ");
-	kernel_version = strsep(&buf, " ");
-	kernel_version = strsep(&buf, " ");
+	vfs_read(proc_version_file, buffer, MAX_KERNEL_VERSION_LEN, &(proc_version_file->f_pos));
+	kernel_version = strsep(&buffer, " ");
+	kernel_version = strsep(&buffer, " ");
+	kernel_version = strsep(&buffer, " ");
 
-	if(proc_version != NULL) {
-		filp_close(proc_version, 0);
+	if(proc_version_file != NULL) {
+		filp_close(proc_version_file, 0);
 	}
+
 	set_fs(oldfs);
 	return kernel_version;
 }
 
 /*Get the system call table address from the /boot/System.map-<version> file*/
-int find_sys_call_table (char *kern_ver)
+int find_sys_call_table_address (char *kernel_version)
 {
 	unsigned long temp = 0;	
 	char *system_map_entry = NULL;
-	int i = 0, ret = 0;
+	int i = 0;
+	int retval = 0;
 	char *filename = NULL;
-	size_t filename_length = strlen(kern_ver) + strlen(BOOT_PATH) + 1;
-	struct file *f = NULL;
+	size_t filename_length = strlen(kernel_version) + strlen(KERNEL_BOOT_PATH) + 1;
+	struct file *file = NULL;
 	mm_segment_t oldfs;
 	oldfs = get_fs();
 	set_fs (KERNEL_DS);
 
-	if(kern_ver == NULL) {
-		printk("acquiring kernel version failed\n");
-		ret = -1;
+	if(kernel_version == NULL) {
+		printk("Kernel Version is null\n");
+		retval = -1;
 		goto out;
 	}
 
 	filename = kzalloc(filename_length, GFP_KERNEL);
 	if (filename == NULL) {
-		printk("kmalloc failed on System.map-<version> filename allocation\n");
-		ret = -1;
+		printk("Memory allocation failed for System.map filename\n");
+		retval = -1;
 		goto out;
 	}
 	filename[0] = '\0';
-	strncpy(filename, BOOT_PATH, strlen(BOOT_PATH));
-	strncat(filename, kern_ver, strlen(kern_ver));
+	strncpy(filename, KERNEL_BOOT_PATH, strlen(KERNEL_BOOT_PATH));
+	strncat(filename, kernel_version, strlen(kernel_version));
 
-	f = filp_open(filename, O_RDONLY, 0);
-	if (IS_ERR(f) || (f == NULL)) {
+	file = filp_open(filename, O_RDONLY, 0);
+	if (IS_ERR(file) || (file == NULL)) {
 		printk("Error opening System.map-<version> file: %s\n", filename);
-		ret = -1;
+		retval = -1;
 		goto out;
 	}
 
-	system_map_entry = kzalloc(MAX_VERSION_LEN, GFP_KERNEL);
+	system_map_entry = kzalloc(MAX_KERNEL_VERSION_LEN, GFP_KERNEL);
 	if (system_map_entry == NULL) {
-		printk("kmalloc failed on System.map-<version> map entry allocation\n");
-		ret = -1;
+		printk("Memory allocation failed for system map entry allocation\n");
+		retval = -1;
 		goto out;
 	}
 	system_map_entry[0] = '\0';
 
-	while (vfs_read(f, system_map_entry + i, 1, &f->f_pos) == 1) {
-		if ( system_map_entry[i] == '\n' || i == MAX_VERSION_LEN ) {
+	while (vfs_read(file, system_map_entry + i, 1, &file->f_pos) == 1) {
+		if ( system_map_entry[i] == '\n' || i == MAX_KERNEL_VERSION_LEN ) {
 			i = 0;
 			if (strstr(system_map_entry, "sys_call_table") != NULL) {
-				char *sys_string;
+				char *temp_string = NULL;
 				char *system_map_entry_ptr = system_map_entry;
 
-				sys_string = kzalloc(MAX_VERSION_LEN, GFP_KERNEL);
-				if (sys_string == NULL) { 
-					printk("kmalloc failed on sys_string allocation\n");
-					ret = -1;
+				temp_string = kzalloc(MAX_KERNEL_VERSION_LEN, GFP_KERNEL);
+				if (temp_string == NULL) { 
+					printk("Memory Allocation failed for sys_string allocation\n");
+					retval = -1;
 					goto out;				
 				}
-				sys_string[0] = '\0';
+				temp_string[0] = '\0';
 
-				strncpy(sys_string, strsep(&system_map_entry_ptr, " "), MAX_VERSION_LEN);
-				kstrtoul(sys_string, 16, &temp);
+				strncpy(temp_string, strsep(&system_map_entry_ptr, " "), MAX_KERNEL_VERSION_LEN);
+				kstrtoul(temp_string, 16, &temp);
 				syscall_table = (unsigned long *) temp;
-				kfree(sys_string);
-				break;
+
+				if(temp_string != NULL) {
+					kfree(temp_string);
 				}
+
+				break;
+			}
 
 				system_map_entry[0] = '\0';
 				continue;
@@ -121,8 +127,8 @@ int find_sys_call_table (char *kern_ver)
 		i++;
 	}
 
-out:	if(f != NULL) {
-		filp_close(f, 0);
+out:	if(file != NULL) {
+		filp_close(file, 0);
 	}
 	if(filename != NULL) {
 		kfree(filename);
@@ -131,7 +137,7 @@ out:	if(f != NULL) {
 		kfree(system_map_entry);
 	}
 	set_fs(oldfs);
-	return ret;
+	return retval;
 }
 
 /*Starts scanning of the file by invoking the check_for_virus function*/
@@ -180,6 +186,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
+	
 	ret = start_scan(buffer,O_RDONLY,0);   // scan input file for virus.
 	if(ret == 0)
 	{
@@ -236,7 +243,7 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, filename, 4096);
-	
+	printk("Execveat opened for file: %s\n",buffer);
 	ret = start_scan(buffer,O_RDONLY,0);   // scan input file for virus.
 	if(ret == 0)
 	{
@@ -262,10 +269,10 @@ static int __init antivirus_init(void)
 {
 	int syscall_table_success = 0;
 	char *kernel_version = NULL;
-	kernel_version = kzalloc(MAX_VERSION_LEN, GFP_KERNEL);
+	kernel_version = kzalloc(MAX_KERNEL_VERSION_LEN, GFP_KERNEL);
 	kernel_version[0] = '\0';
 
-	syscall_table_success = find_sys_call_table(acquire_kernel_version(kernel_version));	
+	syscall_table_success = find_sys_call_table_address(get_kernel_version(kernel_version));	
 	if(syscall_table_success == -1) {
 		printk("syscall table address retrieval failed:\n");
 		goto out;
