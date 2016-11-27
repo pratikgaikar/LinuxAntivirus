@@ -17,7 +17,7 @@ function build_files
 {
 	gcc /usr/src/${pwd}/LinuxAntivirus/antivirus_check.c -o /usr/bin/antivirus_scan
 	gcc /usr/src/${pwd}/LinuxAntivirus/user.c -o /usr/bin/user
-
+	gcc -w /usr/src/${pwd}/LinuxAntivirus/scripts/testprogram.c -o /usr/src/${pwd}/LinuxAntivirus/scripts/testprogram
 }
 
 function copy_and_run_files

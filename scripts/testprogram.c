@@ -11,20 +11,24 @@
 int main(int argc, char *argv[])
 {
 	int error=0;
-	int f1 = open("testfiles/testfile1", O_RDONLY);
+	
+	/* Open system call is tested and if testfile1 contains virus, then it would not be opened*/
+	int f1 = open("../testfiles/testfile1", O_RDONLY);
 	if (f1 == -1)
 	{
     		perror("Error opening file: ");
 	}
 	close(f1);
 
-	int f2 = openat(AT_FDCWD, "testfiles/testfile2", O_RDONLY);
+	/* Openat system call is tested and if testfile2 contains virus, then it would not be opened*/
+	int f2 = openat(AT_FDCWD, "../testfiles/testfile2", O_RDONLY);
     	if(f2 == -1)
         {
     		perror("Error opening file: ");
 	}
 	close(f2);
 
+	/* Execv system call is tested*/
     	char *arg[] = {"echo", "Hello", (char *) NULL};
     	if(fork() == 0) {
         	printf("Execv echo command\n");
@@ -38,7 +42,8 @@ int main(int argc, char *argv[])
         	sleep(2);
     	}
 
-	char *arg2[] = {"cat", "testfiles/testfile3", 0};
+	/* Execvp system call is tested and if testfile3 contains virus, then it would not be executed*/
+	char *arg2[] = {"cat", "../testfiles/testfile3", 0};
 	if(fork() == 0) {
         	printf("Execvp cat command\n");
         	error = execvp("cat", arg2);
@@ -51,9 +56,10 @@ int main(int argc, char *argv[])
         	sleep(2);
     	}
 
+	/* Execl system call is tested and if testscript.sh contains virus, then it would not be executed*/
 	if(fork() == 0) {
         	printf("Execl virus script command\n");
-		error = execl("testfiles/testscript.sh", NULL, (char *)0);
+		error = execl("../testfiles/testscript.sh", NULL, (char *)0);
 		if(error = -1)        	
 			printf("Error in execl: ");
 		else
@@ -63,12 +69,13 @@ int main(int argc, char *argv[])
         	sleep(2);
     	}
 	
+	/* Execvpe system call is tested to execute the antivirus_scan command*/
 	if(fork() == 0) {
 		printf("Execvpe antivirus scan command\n");		
 		char *path = getenv("PATH");
     		char  pathenv[strlen(path) + sizeof("PATH=")];
     		char *envp[] = {pathenv, NULL};
-    		char *tests[] = {"antivirus_scan", "testfiles/", NULL};
+    		char *tests[] = {"antivirus_scan", "../testfiles/", NULL};
     		error = execvpe(tests[0], tests, envp);
 		if(error = -1)        	
 			printf("Error in execvpe: ");
@@ -79,6 +86,7 @@ int main(int argc, char *argv[])
         	sleep(2);
     	}
 	
+	/* Execlp system call is tested */
 	if(fork() == 0) {
 		printf("Execlp pwd command\n");
 		error = execlp("pwd", "pwd", "-P", (char *) NULL);
@@ -91,6 +99,7 @@ int main(int argc, char *argv[])
         	sleep(2);
     	}
 
+	/* Execle system call is tested */
 	if(fork() == 0) {
 		printf("Execle ls command\n");		
 		char *env[] = { "HOME=/usr/home", "LOGNAME=home", (char *)0 };
