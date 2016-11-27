@@ -38,7 +38,7 @@ int open_netlink(void)
     	}
 	
 	if (setsockopt(sock, 270, NETLINK_ADD_MEMBERSHIP, &group, sizeof(group)) < 0) {
-        	printf("setsockopt < 0\n");
+        	printf("can not add setsock options\n");
         	return -1;
     	}
     	
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     	sock = open_netlink();
        	if (sock < 0)
         	return sock;
-	printf("Listening:\n");
+	printf("Listening for messages:\n");
 	while (1)
     	{
 		read_event(sock);
