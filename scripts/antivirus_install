@@ -33,5 +33,10 @@ function copy_and_run_files
 	sh install.sh
 }
 
+var=`lsmod |grep antivirus`
+if [[ -z "$var" ]];then
 build_files
 copy_and_run_files
+else
+echo "Already Installed"
+fi
