@@ -303,6 +303,7 @@ static int __init antivirus_init(void)
 		else {
 			//printk("syscall_table is NULL\n");
 		}
+		
 	}
 	
 	nl_sk = netlink_kernel_create(&init_net, MYPROTO, NULL);
@@ -310,6 +311,8 @@ static int __init antivirus_init(void)
         	pr_err("Error creating socket.\n");
         	return -10;
     	}
+
+	send_to_user("INSTALLED_ANTIVIRUS"); // send using socket
 out:	
 	if(kernel_version != NULL) {
 		kfree(kernel_version);

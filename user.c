@@ -76,6 +76,14 @@ int read_event(int sock)
                 	system(command);			
 			exit(0);
 		}
+		else if(strcmp(NLMSG_DATA((struct nlmsghdr *) &buffer),"INSTALLED_ANTIVIRUS")==0)
+		{
+			strcpy(command,"notify-send \"");
+                	strcpy(msg1," ANTIVIRUS INSTALLED \"");
+			strcat(command,msg1);
+                	system(command);			
+			
+		}
 		else
 		{
 			strcpy(command,"notify-send -i error \"");
