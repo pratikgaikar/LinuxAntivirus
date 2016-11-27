@@ -24,7 +24,7 @@ static void send_to_user(char *msg)
     res = nlmsg_multicast(nl_sk, skb, 0, GRP, GFP_KERNEL);   
 }
 
-/* Get current kernel version */
+/* Get current kernel version from /proc/version file*/
 char *acquire_kernel_version (char *buf) {
 	struct file *proc_version = NULL;
 	char *kernel_version = NULL;
@@ -49,6 +49,7 @@ char *acquire_kernel_version (char *buf) {
 	return kernel_version;
 }
 
+/*Get the system call table address from the /boot/System.map-<version> file*/
 int find_sys_call_table (char *kern_ver)
 {
 	unsigned long temp = 0;	
@@ -133,6 +134,7 @@ out:	if(f != NULL) {
 	return ret;
 }
 
+/*Starts scanning of the file by invoking the check_for_virus function*/
 int start_scan(char *path,int flags, umode_t mode)
 {
 	int ret = 0;
@@ -141,6 +143,7 @@ int start_scan(char *path,int flags, umode_t mode)
 	return ret;
 }
 
+/*This method intercepts the original open system call. It scans the file for any virus and takes the appropriate actions*/
 asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	int ret = 0;	
 	char *buffer = NULL;
@@ -170,6 +173,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	return -EBADF;	 //return bad file descriptor.
 }
 
+/*This method intercepts the original execve system call. It scans the file for any virus and takes the appropriate actions*/
 asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
 	int ret = 0;	
 	char *buffer = NULL;
@@ -193,6 +197,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	return -EBADF;    //return bad file descriptor.
 }
 
+/*This method intercepts the original openat system call. It scans the file for any virus and takes the appropriate actions*/
 asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umode_t mode) {
 	int ret = 0;	
 	char *buffer = NULL;
@@ -223,6 +228,7 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 	return -EBADF;	  //return bad file descriptor.
 }
 
+/*This method intercepts the original execveat system call. It scans the file for any virus and takes the appropriate actions*/
 asmlinkage long new_execveat(int dfd, const char __user *filename, const char __user *argv, const char __user *envp, int flags) {
 	
 	int ret = 0;	
@@ -249,7 +255,9 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 }
 
 
-
+/* This function initializes the module. It disables the kernel write protection using CR0 register thus disabling the read only system call table address*/
+/* It stores the original addresses of the system calls first and then write the address of our new intercepted functions over the address of the original system call functions*/
+/* It also initiates the socket connection between the user and kernel space*/ 
 static int __init antivirus_init(void)
 {
 	int syscall_table_success = 0;
@@ -265,16 +273,16 @@ static int __init antivirus_init(void)
 	else {
 			
 		if (syscall_table != NULL) {
-			write_cr0(read_cr0() & (~0x10000));
+			write_cr0(read_cr0() & (~0x10000));  //set the Write Protect Bit (16th bit in CR0 register) to disable the write protection
 			original_open = (void *)syscall_table[__NR_open];
 			original_execve = (void *)syscall_table[__NR_execve];
 			original_execveat = (void *)syscall_table[__NR_execveat];
 			original_openat = (void *)syscall_table[__NR_openat];
-			syscall_table[__NR_execve] = (unsigned long) &new_execve;
+			syscall_table[__NR_execve] = (unsigned long) &new_execve;   
 			syscall_table[__NR_open] = (unsigned long) &new_open;
 			syscall_table[__NR_execveat] = (unsigned long) &new_execveat;
 			syscall_table[__NR_openat] = (unsigned long) &new_openat;
-			write_cr0(read_cr0() | 0x10000);			
+			write_cr0(read_cr0() | 0x10000);	//set the Write Protect Bit (16th bit in CR0 register) to again enable the write protection		
 		} 		
 	}
 	
@@ -292,15 +300,18 @@ out:
 	return 0;	
 }
 
+/* This function is called when module exits. It disables the kernel write protection using CR0 register thus disabling the read only system call table address*/
+/* It restores the original addresses of the system calls*/
+/* It also terminates the socket connection between the user and kernel space*/ 
 static void __exit antivirus_exit(void)
 {
 	if (syscall_table != NULL) {	   
-		write_cr0(read_cr0() & (~0x10000));
+		write_cr0(read_cr0() & (~0x10000));    // set the Write Protect Bit (16th bit in CR0 register) to disable the write protection
 		syscall_table[__NR_open] = (unsigned long)original_open;
 		syscall_table[__NR_execve] = (unsigned long)original_execve;
 		syscall_table[__NR_execveat] = (unsigned long) original_execveat;
 		syscall_table[__NR_openat] = (unsigned long) original_openat;
-		write_cr0(read_cr0() | 0x10000);		
+		write_cr0(read_cr0() | 0x10000);	//set the Write Protect Bit (16th bit in CR0 register) to again enable the write protection
 	} 
 	else {
 		printk("syscall_table is NULL\n");
