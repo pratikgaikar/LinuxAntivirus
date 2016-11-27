@@ -21,9 +21,9 @@
 #include <net/netlink.h>
 #include <net/net_namespace.h>
 
-#define PROC_V    "/proc/version"
-#define BOOT_PATH "/boot/System.map-"
-#define MAX_VERSION_LEN   256
+#define PROC_VERSION    "/proc/version"
+#define KERNEL_BOOT_PATH "/boot/System.map-"
+#define MAX_KERNEL_VERSION_LEN   256
 #define PROTOCOL NETLINK_USERSOCK
 #define GRP 21
 
