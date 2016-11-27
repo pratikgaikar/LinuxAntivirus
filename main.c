@@ -21,7 +21,7 @@ static void send_to_user(char *msg)
     }
     nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
     strcpy(nlmsg_data(nlh), msg);    
-    res = nlmsg_multicast(nl_sk, skb, 0, MYGRP, GFP_KERNEL);   
+    res = nlmsg_multicast(nl_sk, skb, 0, GRP, GFP_KERNEL);   
 }
 
 /* Get current kernel version */
@@ -153,12 +153,12 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 		return original_open(path, flags, mode);
 	}
 	
-	ret = start_scan(buffer,flags,mode);
+	ret = start_scan(buffer,flags,mode);   // scan input file for virus.
 	if(ret == 0)
 	{
 		if(buffer)
 			kfree(buffer);
-		return original_open(path, flags, mode);
+		return original_open(path, flags, mode);  //return original open
 	}	
 	else if(ret == -10)
 	{
@@ -167,7 +167,7 @@ asmlinkage long new_open(const char __user * path, int flags, umode_t mode) {
 	
 	if(buffer)
 		kfree(buffer);
-	return -EBADF;	
+	return -EBADF;	 //return bad file descriptor.
 }
 
 asmlinkage long new_execve(const char __user * path, const char __user * argv, const char __user * envp) {
@@ -176,12 +176,12 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	buffer = kzalloc(PAGE_SIZE,GFP_KERNEL);
 	buffer[0] = '\0';	
 	copy_from_user(buffer, path, 4096);
-	ret = start_scan(buffer,O_RDONLY,0);
+	ret = start_scan(buffer,O_RDONLY,0);   // scan input file for virus.
 	if(ret == 0)
 	{
 		if(buffer)
 			kfree(buffer);
-		return original_execve(path, argv, envp);
+		return original_execve(path, argv, envp);  //return original execve
 	}	
 	else if(ret == -10)
 	{
@@ -190,7 +190,7 @@ asmlinkage long new_execve(const char __user * path, const char __user * argv, c
 	
 	if(buffer)
 		kfree(buffer);
-	return -EBADF;
+	return -EBADF;    //return bad file descriptor.
 }
 
 asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umode_t mode) {
@@ -200,24 +200,18 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 	buffer[0] = '\0';	
 	copy_from_user(buffer, filename, 4096);
 
-	//printk("Openat hooked for file: %s\n", buffer);
 	if(flags > 32768 || strstr(buffer,"/proc")) {
 		if(buffer)
-			kfree(buffer);
-		//printk("Open hooked for file %s with flags: %d and mode: %d\n", buffer, flags, mode);
+			kfree(buffer);		
 		return original_openat(dfd, filename, flags, mode);
 	}
 	
-	/*if(strstr(buffer,"testfile1")!=NULL) {
-		ret = start_scan(buffer,flags,mode);
-	}*/
-
-	ret = start_scan(buffer,flags,mode);
+	ret = start_scan(buffer,flags,mode);  // scan input file for virus.
 	if(ret == 0)
 	{
 		if(buffer)
 			kfree(buffer);
-		return original_openat(dfd, filename, flags, mode);
+		return original_openat(dfd, filename, flags, mode);  //return original openat
 	}	
 	else if(ret == -10)
 	{
@@ -225,8 +219,8 @@ asmlinkage long new_openat(int dfd, const char __user *filename, int flags, umod
 	}
 	
 	if(buffer)
-		kfree(buffer);
-	return -EBADF;	
+		kfree(buffer); 
+	return -EBADF;	  //return bad file descriptor.
 }
 
 asmlinkage long new_execveat(int dfd, const char __user *filename, const char __user *argv, const char __user *envp, int flags) {
@@ -237,22 +231,21 @@ asmlinkage long new_execveat(int dfd, const char __user *filename, const char __
 	buffer[0] = '\0';	
 	copy_from_user(buffer, filename, 4096);
 	
-	ret = start_scan(buffer,O_RDONLY,0);
+	ret = start_scan(buffer,O_RDONLY,0);   // scan input file for virus.
 	if(ret == 0)
 	{
 		if(buffer)
-			kfree(buffer);
-		
-		return original_execveat(dfd, filename, argv, envp, flags);
+			kfree(buffer);		
+		return original_execveat(dfd, filename, argv, envp, flags);   //return original execveat
 	}	
 	else if(ret == -10)
 	{
 		send_to_user(buffer); // send using socket
 	}
-	out:
+	
 	if(buffer)
 		kfree(buffer);
-	return -EBADF;		
+	return -EBADF;     //return bad file descriptor.		
 }
 
 
@@ -285,7 +278,7 @@ static int __init antivirus_init(void)
 		} 		
 	}
 	
-	nl_sk = netlink_kernel_create(&init_net, MYPROTO, NULL);
+	nl_sk = netlink_kernel_create(&init_net, PROTOCOL, NULL);
     	if (!nl_sk) {
         	pr_err("Error creating socket.\n");
         	return -10;

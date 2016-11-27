@@ -24,8 +24,8 @@
 #define PROC_V    "/proc/version"
 #define BOOT_PATH "/boot/System.map-"
 #define MAX_VERSION_LEN   256
-#define MYPROTO NETLINK_USERSOCK
-#define MYGRP 21
+#define PROTOCOL NETLINK_USERSOCK
+#define GRP 21
 
 /*
  *function prototype for linked list
