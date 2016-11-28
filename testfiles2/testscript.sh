@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "ZZZZZYYYYYXXXXXWWWWWVVVVVUUUUUTTTTT0123456789$&@?>=<;:SSSSSFor for football"
