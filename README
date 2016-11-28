@@ -1,39 +1,71 @@
-
 Installation & Testing:
 
 The antivirus software can be installed only if the user has root privileges.  Antivirus scan can be executed by normal user.
+The attached link to drive has following files:
+1. LinuxAntivirus.zip: This is the code.
+2. Ubuntu-WARLOCK-VM : This is a virtual machine image which can directly be opened in VMware workstation 12 - (EASY TO TEST, it has everything setup already)
+3. VMWare workstation software
+4. ISO image: Alternatively one can setup using the ISO, instructions given at the end)
+
 Here are the steps to get the antivirus code and install antivirus:
 		
-1.	From Virtual Box, import the Virtual Disk Image provided along with this project. Start the machine with the credentials:
-	username: warlock
+1.	Unzip the virutal machine image "Ubuntu-WARLOCK-VM.rar" provided with password:CSE509PROJECT
+	Open VMware workstation pro. Open the virutal machine image "Ubuntu-WARLOCK-VM" using "open virtual machine" option in VMware workstation pro
+	It will give a pop up - select the option "I copied it".
+	Use credentials:
+	username: WARLOCK
 	password: CSE509PROJECT
-		
+	
 2.	After starting the machine, run the following script from the directory /usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/scripts/ to install antivirus module:
-		antivirus_install
+		./antivirus_install
 		
 3.	After the script is executed, the antivirus module is inserted into the kernel and scanning starts
 
-4.	The on demand mode of antivirus scan can be executed using the following command:
+4.	Goto path : /usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/
+	The on demand mode of antivirus scan can be executed using the following command in this directory:
+		
 		antivirus_scan testfiles/ 
 		This would scan the whole of testfiles directory.
-		antivirus_scan testfiles/testfile1
-		This would scan only testfile1 of testfiles directory.
-		antivirus_scan testfiles/   testfiles2/
-		This would first scan testfiles directory, then scan testfiles2 directory.
+		(The virus files are testfile1 and testfile4, those would get renamed and permission removed, colored red)
+
+5. Other options for On demand scanning:
+
+		a. antivirus_scan testfiles/testfile1
+			This would scan only testfile1 of testfiles directory.
+
+		b. antivirus_scan testfiles/   testfiles2/
+			This would first scan testfiles directory, then scan testfiles2 directory.
+
+			
+(Please note: Performing one of these would rename the virus files appending ".virus" in them, so running one after the other might confuse you about 
+ the result)
 		
-5.	Every file which is opened or executed by the user is scanned for virus and appropriate action is taken.
+5.	Every file which is opened or executed by the user is scanned for virus and appropriate action is taken. This is on access scan.
 		
-6.	Run cat command to open a virus file - On Access mode
+6.	On Access mode : Run cat command to open a virus file (Since the file is already renamed to testfile1.virus, we try to open that)
+		cat testfiles/testfile1.virus
+		
+
+	(You can also keep a copy a testfiles folder and run on the copy with command-)
 		cat testfiles/testfile1
-		
-7.	The module could also be tested by executing the following command within the /usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/scripts/ folder by which all the open and execve related system calls are invoked
+
+
+7.	The module could also be tested by executing the following command within the /usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/scripts/ folder by which 	all the open and execve related system calls are invoked
 		./testprogram
+		
+		(This would run on testfiles2 - a copy of input folder)
 		
 8.	To update the whitelist and blacklist file, the following script is to be executed when the antivirus module is not inserted: 
 		antivirus_update
 
 PLEASE NOTE: 
 1. Once antivirus is ran, the virus files get renamed having ".virus" appended to the name.
-    Ideal way to test would be to keep a copy of a folder, run on the copy, uninstall antivirus
+    One way to test would be to keep a copy of a folder, run on the copy, uninstall antivirus
     and again get the original folder to continue testing.
 2. The testfiles by default have root access only. If you need to scan the testfiles with user privileges, please create files on which user has access.
+3. Antivirus Update can only be done by the root.
+4. Alternatively if you are not able to run the code in VMware workstation, We have attached ISO file which can be used to create an image of Linux.
+   There is a need to git clone the code and install antivirus on it.
+
+   Run the following git clone command in the /usr/src/linux-headers-4.2.0.27-generic folder to clone the code present in the git repository LinuxAntivirus:
+		git clone https://github.com/pratikgaikar/LinuxAntivirus.git
