@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 	printf("		Executing OPEN System Call  			  \n");
 	printf("------------------------------------------------------------------\n");
 	printf("File is opened using open system call\n");
-	int f1 = open("../testfiles2/testfile1", O_RDONLY);
+	int f1 = open("/usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/testfiles2/testfile1", O_RDONLY);
 	if (f1 == -1)
 	{
     		perror("Error opening file: ");
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	printf("		Executing OPENAT System Call  			  \n");
 	printf("------------------------------------------------------------------\n");	
 	printf("File is opened using openat system call\n");	
-	int f2 = openat(AT_FDCWD, "../testfiles2/testfile2", O_RDONLY);
+	int f2 = openat(AT_FDCWD, "/usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/testfiles2/testfile2", O_RDONLY);
     	if(f2 == -1)
         {
     		perror("Error opening file: ");
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	printf("------------------------------------------------------------------\n");
 	printf("		Executing EXECVP System Call  			  \n");
 	printf("------------------------------------------------------------------\n");
-	char *arg2[] = {"cat", "../testfiles2/testfile3", 0};
+	char *arg2[] = {"cat", "/usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/testfiles2/testfile3", 0};
 	if(fork() == 0) {
         	printf("Cat command is executed using execvp system call\n");
         	error = execvp("cat", arg2);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 	printf("------------------------------------------------------------------\n");
 	if(fork() == 0) {
         	printf("Testscript.sh is executed using execl system call\n");
-		error = execl("../testfiles2/testscript.sh", NULL, (char *)0);
+		error = execl("/usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/testfiles2/testscript.sh", NULL, (char *)0);
 		if(error = -1)        	
 			perror("Error in execl: ");
 		else
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 		char *path = getenv("PATH");
     		char  pathenv[strlen(path) + sizeof("PATH=")];
     		char *envp[] = {pathenv, NULL};
-    		char *tests[] = {"antivirus_scan", "../testfiles2/", NULL};
+    		char *tests[] = {"antivirus_scan", "/usr/src/linux-headers-4.2.0-27-generic/LinuxAntivirus/testfiles2/", NULL};
     		error = execvpe(tests[0], tests, envp);
 		if(error = -1)        	
 			perror("Error in execvpe: ");
